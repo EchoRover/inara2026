@@ -1,0 +1,714 @@
+(() => {
+  const { clubs, short = {}, events, universities } = window.INARA;
+  const main = document.getElementById("main");
+  const bar = document.getElementById("bar");
+  const page = document.body.dataset.page;
+  const bySlug = Object.fromEntries(events.map((e) => [e.slug, e]));
+  const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const aed = (n) => "AED " + n.toLocaleString("en-US");
+  const hasPrizes = (e) => Array.isArray(e.prizes) && e.prizes.length > 0;
+  const pool = (e) => aed(e.prizes.reduce((a, b) => a + b, 0));
+  // team [1, 1] is a solo event: no team name, no team size, and the form talks to one person
+  const solo = (e) => e.team?.[0] === 1 && e.team?.[1] === 1;
+  const clubName = (id) => clubs[id] + (short[id] ? ` (${short[id]})` : "");
+  // Collabs credit every host club equally.
+  const hosts = (e) => e.hosts.map(clubName).join(" × ");
+  const teamLine = (e) => (solo(e) ? "Individual entry" : e.team[0] === e.team[1] ? `Teams of ${e.team[0]}` : `Teams of ${e.team[0]} to ${e.team[1]}`);
+  // "hours" is a number (2 -> "2 hours") or text like "3 to 4 hours" / "All through the fest"
+  const dur = (e) => (typeof e.hours === "string" ? e.hours : `${e.hours} ${e.hours === 1 ? "hour" : "hours"}`);
+  // entry: "free" = a show, stall or workshop anyone can walk into, no registration
+  const free = (e) => e.entry === "free";
+  // Competitions get the tiles and slides. Free shows and stalls go in "Also at Inara" below them.
+  const comps = events.filter((e) => !free(e));
+  const extras = events.filter(free);
+  const status = (e) => (e.open ? "Registration open" : free(e) ? "Free to attend" : "Opens soon");
+  const known = (v) => v && v !== "TBC";
+  const dayLine = (e) => (known(e.day) ? e.day : "Day to be confirmed");
+  const tag = (e) => (e.placeholder ? `<span class="t-ph">Placeholder</span>` : "");
+  // Opened straight from disk, folders don't resolve to index.html, so spell it out.
+  const local = location.protocol === "file:";
+  const link = (path) => (local ? path.replace(/(^|\/)(#|$)/, "$1index.html$2") : path);
+  const root = page === "home" ? "" : "../";
+  const eventHref = (e, hash = "") => link(`${root}${e.slug}/${hash}`);
+  // Served over http(s), registrations go to /api on the same address (the shared backend).
+  // Opened straight from disk there is no backend, and the form only simulates a registration.
+  const API = window.INARA_API ?? (location.protocol.startsWith("http") ? "/api" : null);
+  // Prototype mode: the form works on screen, but nothing is sent or saved until Inara is approved.
+  // Set to false (and start the backend) to take real registrations.
+  const PREVIEW = true;
+  const smooth = () => (matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth");
+
+  let scenes = [];
+  function mountScenes() {
+    scenes.forEach((s) => s.stop());
+    scenes = [...main.querySelectorAll("canvas[data-scene]")].map((c) => window.InaraScenes.mount(c, c.dataset.scene));
+  }
+  function guidelinesBtn(e, cls = "btn ghost") {
+    return e.guidelines
+      ? `<a class="${cls}" href="${esc(e.guidelines)}" target="_blank" rel="noopener">Read the guidelines</a>`
+      : `<span class="${cls}" aria-disabled="true">Guidelines coming soon</span>`;
+  }
+
+  // One cell of the star lattice as an SVG, used as a mask so each tile tints it with its own light.
+  const PATTERN_TILE = (() => {
+    const R = 32, r = R * 0.62, c = 32, pts = [];
+    for (let k = 0; k < 16; k++) { const a = (k * Math.PI) / 8, d = k % 2 ? r : R; pts.push(`${(c + Math.cos(a) * d).toFixed(2)},${(c + Math.sin(a) * d).toFixed(2)}`); }
+    const dm = (x) => `M${x},${c - r * 0.42}L${x + r * 0.42},${c}L${x},${c + r * 0.42}L${x - r * 0.42},${c}Z`;
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" fill="none" stroke="black" stroke-width="1.2"><polygon points="${pts.join(" ")}"/><path d="${dm(0)}${dm(64)}"/></svg>`;
+    return "data:image/svg+xml," + encodeURIComponent(svg);
+  })();
+
+  // ================= home =================
+  function home() {
+    const hostIds = [...new Set(comps.flatMap((e) => e.hosts))];
+    const anyPlaceholder = events.some((e) => e.placeholder);
+    main.innerHTML = `
+      <section class="stage hero" id="top" aria-label="Inara 2026">
+        <canvas data-scene="hero" aria-hidden="true"></canvas>
+        <div class="stage-content">
+          <span class="hero-ar" lang="ar" dir="rtl">إنارة</span>
+          <h1 class="hero-name">Inara <span class="yr">2026</span></h1>
+          <span class="hero-inst">The cultural fest of IIT Delhi Abu Dhabi</span>
+          <span class="hero-meta">13 to 15 November 2026</span>
+          <div class="hero-actions"><a class="btn" href="#events">See the events</a></div>
+        </div>
+      </section>
+
+      <section class="section" id="events">
+        <div class="wrap">
+          <h2 class="h2">Events</h2>
+          <p class="lede">${comps.length} competitions from ${hostIds.length} clubs, open to students of every UAE university. Pick one to read what it's about, then register on its page.${anyPlaceholder ? " The line-up below is a placeholder until the clubs confirm it." : ""}</p>
+          <ul class="tiles" style="--pat:url('${PATTERN_TILE}')">${comps.map((e) => `
+            <li class="tile scene-${e.scene}"><a href="${eventHref(e)}">
+              <span class="t-status">${status(e)}</span>${tag(e)}
+              <span class="t-name">${esc(e.name)}</span>
+              <span class="t-host">${esc(hosts(e))}</span>
+              ${e.open ? `<span class="t-facts">${esc([teamLine(e), hasPrizes(e) ? `${pool(e)} in prizes` : ""].filter(Boolean).join(", "))}</span>` : free(e) ? `<span class="t-facts">${esc([dur(e), known(e.venue) ? e.venue : ""].filter(Boolean).join(", "))}</span>` : ""}
+            </a></li>`).join("")}</ul>
+        </div>
+      </section>
+
+      ${slides()}
+
+      ${extras.length ? `<section class="section also" id="also">
+        <div class="wrap">
+          <h2 class="h2">Also at Inara</h2>
+          <p class="lede">Shows, stalls and workshops. Free to attend, no registration needed.</p>
+        </div>
+      </section>
+      ${slides(extras, "Also at Inara")}` : ""}
+
+      <section class="section" id="how">
+        <div class="wrap">
+          <h2 class="h2">How it works</h2>
+          <p class="lede">Free to enter. Every event has its own page.</p>
+          <ol class="steps">
+            <li><h3>Pick an event</h3><p>Read its page to see what you'll do, who it's for and what to bring.</p></li>
+            <li><h3>Register</h3><p>One short form on the event's page. A confirmation email follows.</p></li>
+            <li><h3>Come along</h3><p>Everything happens on campus, 13 to 15 November.</p></li>
+          </ol>
+        </div>
+      </section>
+
+      <section class="where" id="where" aria-labelledby="where-h">
+        <canvas aria-hidden="true"></canvas>
+        <small class="map-credit">Outline © geoBoundaries (CC BY 4.0). Roads © OpenStreetMap contributors</small>
+        <div class="map-ctl" aria-label="Map controls"><button type="button" data-zoom="in" aria-label="Zoom in">+</button><button type="button" data-zoom="out" aria-label="Zoom out">−</button><button type="button" data-zoom="home" aria-label="Back to campus">◎</button></div>
+        <p class="map-hint" aria-hidden="true">Use ctrl + scroll, or pinch, to zoom the map</p>
+        <div class="wrap where-card">
+          <h2 class="h2" id="where-h">Where we are</h2>
+          <div class="map-go" role="group" aria-label="Show on the map"><button type="button" data-go="campus">Our campus</button><button type="button" data-go="dubai">Dubai</button><button type="button" data-go="sharjah">Sharjah</button><button type="button" data-go="alain">Al Ain</button><button type="button" data-go="uae">Whole UAE</button></div>
+          <div class="actions">
+            <a class="btn" href="https://www.google.com/maps/dir/?api=1&destination=24.395148,54.58733" target="_blank" rel="noopener">Get directions</a>
+            <a class="btn ghost" href="https://maps.app.goo.gl/NpHGPbLYVEjPSU8c8" target="_blank" rel="noopener">Open in Google Maps</a>
+          </div>
+        </div>
+      </section>`;
+    if (window.InaraMap) window.InaraMap.mount(main.querySelector("#where"));
+  }
+
+  // One slide per event, in its own scene. Events that are not open yet get a quieter slide.
+  function band(e) {
+    const facts = e.open
+      ? [teamLine(e), hasPrizes(e) ? `${pool(e)} in prizes` : "", dayLine(e), e.prelim ? "Online round first" : ""]
+      : [dur(e), free(e) && known(e.venue) ? e.venue : "", status(e)];
+    const reg = e.open ? `<a class="btn ghost" href="${eventHref(e, "#register")}">${solo(e) ? "Register" : "Register your team"}</a>` : "";
+    return `
+      <section class="stage band" id="${esc(e.slug)}-band" aria-labelledby="${esc(e.slug)}-h" aria-roledescription="slide" aria-label="${esc(e.name)}">
+        <canvas data-scene="${e.scene}" aria-hidden="true"></canvas>
+        <div class="stage-content">
+          <p class="kicker">${esc(hosts(e))}${e.placeholder ? ", placeholder" : ""}</p>
+          <h2 class="big" id="${esc(e.slug)}-h">${esc(e.name)}</h2>
+          ${e.line ? `<p class="tagline">${esc(e.line)}</p>` : ""}
+          <p class="facts">${facts.filter(Boolean).map((f) => `<span>${esc(f)}</span>`).join("")}</p>
+          <div class="actions"><a class="btn" href="${eventHref(e)}">See the event</a>${reg}</div>
+        </div>
+      </section>`;
+  }
+
+  // The events as full-screen slides you swipe through, like a deck.
+  function slides(list = comps, label = "Events") {
+    return `
+      <section class="slides" aria-roledescription="carousel" aria-label="${esc(label)}">
+        <div class="track" tabindex="0">${list.map(band).join("")}</div>
+        <button class="arrow prev" type="button" aria-label="Previous event">‹</button>
+        <button class="arrow next" type="button" aria-label="Next event">›</button>
+        <button class="play" type="button" aria-label="Pause the slides" aria-pressed="false"><span aria-hidden="true"></span></button>
+        <div class="dots" role="tablist" aria-label="Choose an event">${list.map((e, i) => `<button type="button" role="tab" aria-label="${esc(e.name)}" data-i="${i}"><span>${esc(e.name)}</span></button>`).join("")}</div>
+      </section>`;
+  }
+  // Every slideshow on the page (competitions, and "Also at Inara") runs on its own.
+  function wireSlides() { main.querySelectorAll(".slides").forEach(wireDeck); }
+  function wireDeck(root) {
+    const track = root.querySelector(".track"), dots = [...root.querySelectorAll(".dots button")], n = dots.length;
+    const clampI = (i) => Math.max(0, Math.min(n - 1, i));
+    const go = (i) => track.scrollTo({ left: clampI(i) * track.clientWidth, behavior: smooth() });
+    const cur = () => Math.round(track.scrollLeft / track.clientWidth);
+    root.querySelector(".prev").onclick = () => go(cur() - 1);
+    root.querySelector(".next").onclick = () => go(cur() + 1);
+    dots.forEach((d) => (d.onclick = () => go(+d.dataset.i)));
+    track.addEventListener("keydown", (e) => { if (e.key === "ArrowRight") { e.preventDefault(); go(cur() + 1); } if (e.key === "ArrowLeft") { e.preventDefault(); go(cur() - 1); } });
+    const sync = () => { const i = cur(); dots.forEach((d, j) => d.setAttribute("aria-selected", String(i === j))); root.querySelector(".prev").disabled = i === 0; root.querySelector(".next").disabled = i === n - 1; };
+    track.addEventListener("scroll", () => requestAnimationFrame(sync), { passive: true });
+    sync();
+
+    // Auto-advance: about 7 s a slide, looping. Holds while someone is hovering, touching or tabbing
+    // through the slides, while they're off screen, and never runs with reduced motion on.
+    const DWELL = 7000, play = root.querySelector(".play");
+    let held = 0, stopped = matchMedia("(prefers-reduced-motion: reduce)").matches, visible = false, last = performance.now(), elapsed = 0;
+    const hold = (on) => { held = Math.max(0, held + (on ? 1 : -1)); };
+    root.addEventListener("pointerenter", () => hold(true)); root.addEventListener("pointerleave", () => hold(false));
+    root.addEventListener("focusin", () => hold(true)); root.addEventListener("focusout", () => hold(false));
+    track.addEventListener("touchstart", () => { elapsed = 0; }, { passive: true });
+    const setStopped = (v) => { stopped = v; play.setAttribute("aria-pressed", String(v)); play.setAttribute("aria-label", v ? "Play the slides" : "Pause the slides"); root.classList.toggle("stopped", v); };
+    play.onclick = () => setStopped(!stopped);
+    setStopped(stopped);
+    new IntersectionObserver(([e]) => (visible = e.isIntersecting), { threshold: 0.5 }).observe(root);
+    let shown = cur();
+    (function tick(now) {
+      const dt = now - last; last = now;
+      if (cur() !== shown) { shown = cur(); elapsed = 0; }
+      if (visible && !held && !stopped && !document.hidden) elapsed += dt;
+      if (elapsed >= DWELL) { elapsed = 0; go(cur() === n - 1 ? 0 : cur() + 1); }
+      root.style.setProperty("--progress", String(Math.min(1, elapsed / DWELL)));
+      requestAnimationFrame(tick);
+    })(last);
+  }
+
+  // ================= event page: About and Register tabs =================
+  function eventPage(e) {
+    document.title = `${e.name}, Inara 2026`;
+    const one = solo(e), regLabel = one ? "Register" : "Register your team";
+    // Suggestions share something with this event, and say what. Ties go to events you can register for now.
+    const recs = events.filter((x) => x.slug !== e.slug)
+      .map((x) => { const shared = x.tags.filter((t) => e.tags.includes(t) && t !== "culture"); return { x, shared, score: shared.length * 3 + (x.open ? 1 : 0) }; })
+      .filter((r) => r.score > 1).sort((a, b) => b.score - a.score).slice(0, 3);
+    const more = recs.length ? `<div class="narrow" style="padding-bottom:96px"><h2 class="h2" style="margin-top:56px">You might also like</h2>
+      <ul class="more">${recs.map((r) => `<li><a href="${eventHref(r.x)}">${esc(r.x.name)}</a><span>${esc(hosts(r.x))}</span></li>`).join("")}</ul></div>` : `<div style="padding-bottom:96px"></div>`;
+    const facts = e.open ? [teamLine(e), hasPrizes(e) ? `${pool(e)} in prizes` : "", dayLine(e)].filter(Boolean) : [dur(e), free(e) && known(e.venue) ? e.venue : "", status(e)].filter(Boolean);
+    const phNote = e.placeholder ? `<p class="ph-note"><b>Placeholder.</b> This event is a stand-in until the club confirms the details.</p>` : "";
+    const top = `
+      <section class="stage ev-top" aria-labelledby="ev-h">
+        <canvas data-scene="${e.scene}" aria-hidden="true"></canvas>
+        <div class="stage-content">
+          <p class="kicker">${esc(hosts(e))}</p>
+          <h1 class="big" id="ev-h">${esc(e.name)}</h1>
+          ${e.line ? `<p class="tagline">${esc(e.line)}</p>` : ""}
+          <p class="facts">${facts.map((f) => `<span>${esc(f)}</span>`).join("")}</p>
+          ${e.open ? `<div class="actions"><a class="btn" href="#register" data-tab="register">${regLabel}</a>${guidelinesBtn(e)}</div>` : `<div class="actions">${guidelinesBtn(e)}</div>`}
+        </div>
+      </section>`;
+
+    if (!e.open) {
+      main.innerHTML = `${top}
+        <div class="narrow" style="padding-top:48px">
+          ${phNote}
+          ${free(e) ? `<p class="lead">${esc(e.blurb || "")}</p>
+          <dl class="panel" style="margin-top:32px">
+            <div><dt>When</dt><dd>${known(e.day) ? esc(e.day) + ", " : ""}${esc(dur(e))}</dd></div>
+            <div><dt>Where</dt><dd>${known(e.venue) ? esc(e.venue) : "To be confirmed"}</dd></div>
+            <div><dt>Entry</dt><dd>Free, no registration needed</dd></div>
+          </dl>` : `<p class="lead">The ${esc(e.hosts.map((h) => clubs[h]).join(" and "))} ${e.hosts.length > 1 ? "are" : "is"} putting the final details together. Registration opens on this page soon.</p>`}
+        </div>${more}`;
+      return;
+    }
+    const steps = [
+      [regLabel, `${one ? "One short form" : teamLine(e)}, on the Register tab.`],
+      e.prelim && ["Online round", e.prelim],
+      e.prelim && ["Finalists announced", "We email everyone who is invited on to the event."],
+      !e.prelim && [one ? "You're confirmed" : "Teams confirmed", "We email the schedule before the fest."],
+      [known(e.day) ? `The event, ${e.day}` : "The event, day to be confirmed", `${e.final} ${e.bring || ""}`],
+    ].filter(Boolean);
+    const places = ["1st place", "2nd place", "3rd place"];
+    main.innerHTML = `${top}
+      <nav class="tabs" aria-label="${esc(e.name)}">
+        <div class="wrap" role="tablist">
+          <a class="tab" role="tab" id="tab-about" href="#about" data-tab="about" aria-controls="about">About</a>
+          <a class="tab" role="tab" id="tab-register" href="#register" data-tab="register" aria-controls="register">Register</a>
+          <span class="spacer"></span>
+          <a class="btn" href="#register" data-tab="register" data-only="about">${regLabel}</a>
+        </div>
+      </nav>
+      <div class="panes">
+        <section role="tabpanel" id="about" aria-labelledby="tab-about" tabindex="-1">
+          <div class="wrap ev-body">
+            <div class="copy">
+              ${phNote}
+              <p class="lead">${esc(e.blurb)}</p>
+              <h2 class="h3">How it runs</h2>
+              <ol class="timeline">${steps.map(([h, p]) => `<li><h4>${esc(h)}</h4><p>${esc(p)}</p></li>`).join("")}</ol>
+              ${hasPrizes(e) ? `<h2 class="h3">Prizes</h2>
+              <ol class="podium" aria-label="Prizes">${[1, 0, 2].filter((i) => e.prizes[i] != null).map((i) => `<li class="p${i + 1}"><span class="amt">${aed(e.prizes[i])}</span><span class="block"><b>${i + 1}</b></span><span class="place">${places[i]}</span></li>`).join("")}</ol>` : ""}
+            </div>
+            <aside class="panel" aria-label="At a glance">
+              <dl>
+                <div><dt>${one ? "Entry" : "Team size"}</dt><dd>${one ? "Individual" : e.team[0] === e.team[1] ? `${e.team[0]} people` : `${e.team[0]} to ${e.team[1]} people`}</dd></div>
+                ${e.prelim ? `<div><dt>Online round</dt><dd>Yes, before the fest</dd></div>` : ""}
+                <div><dt>When</dt><dd>${known(e.day) ? esc(e.day) : "To be confirmed"}, ${esc(dur(e))}</dd></div>
+                <div><dt>Where</dt><dd>${known(e.venue) ? esc(e.venue) : "To be confirmed"}</dd></div>
+                ${hasPrizes(e) ? `<div><dt>Prize pool</dt><dd>${pool(e)}</dd></div>` : ""}
+              </dl>
+              <a class="btn" href="#register" data-tab="register">${regLabel}</a>
+              ${guidelinesBtn(e, "btn ghost")}
+            </aside>
+          </div>
+        </section>
+        <section role="tabpanel" id="register" aria-labelledby="tab-register" tabindex="-1" class="wrap reg"></section>
+      </div>${more}`;
+    registration(e, main.querySelector("#register"));
+
+    const tabs = main.querySelector(".tabs");
+    function select(name, scroll, write = true) {
+      main.querySelectorAll('[role="tab"]').forEach((t) => { const on = t.dataset.tab === name; t.setAttribute("aria-selected", String(on)); t.tabIndex = on ? 0 : -1; });
+      main.querySelectorAll('[role="tabpanel"]').forEach((p) => (p.hidden = p.id !== name));
+      main.querySelectorAll("[data-only]").forEach((b) => (b.hidden = b.dataset.only !== name));
+      // only user clicks rewrite the link; doing it during load makes the browser jump to the anchor
+      if (write && location.hash !== "#" + name) history.replaceState(null, "", "#" + name);
+      if (scroll) tabs.scrollIntoView({ behavior: smooth() });
+    }
+    main.addEventListener("click", (ev) => {
+      const a = ev.target.closest("[data-tab]"); if (!a) return;
+      ev.preventDefault(); select(a.dataset.tab, true);
+    });
+    tabs.querySelector('[role="tablist"]').addEventListener("keydown", (ev) => {
+      if (!["ArrowLeft", "ArrowRight"].includes(ev.key)) return;
+      const next = main.querySelector('[role="tab"][aria-selected="false"]');
+      next.focus(); select(next.dataset.tab, false);
+    });
+    addEventListener("hashchange", () => { const h = location.hash.slice(1); if (h === "about" || h === "register") select(h, true); });
+    const start = location.hash.slice(1);
+    select(start === "register" ? "register" : "about", start === "register", false);
+  }
+
+  // ================= registration =================
+  const norm = (s) => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9 ]+/g, " ").replace(/\s+/g, " ").trim();
+  function edits(a, b, max) {
+    if (Math.abs(a.length - b.length) > max) return max + 1;
+    let prev = Array.from({ length: b.length + 1 }, (_, j) => j);
+    for (let i = 1; i <= a.length; i++) {
+      const cur = [i];
+      for (let j = 1; j <= b.length; j++) cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+      prev = cur;
+    }
+    return prev[b.length];
+  }
+  // Exact abbreviation, then prefix, then every typed word starting some word, then substring, then small typos.
+  function matchUnis(q) {
+    const n = norm(q);
+    if (!n) return universities.map((u) => ({ u, s: 0 }));
+    const toks = n.split(" ");
+    return universities.map((u) => {
+      const name = norm(u.name), aka = u.aka.map(norm), words = (name + " " + aka.join(" ")).split(" ");
+      let s = 0;
+      if (aka.includes(n)) s = 100;
+      else if (name.startsWith(n) || aka.some((a) => a.startsWith(n))) s = 80;
+      else if (toks.every((t) => words.some((w) => w.startsWith(t)))) s = 60;
+      else if (name.includes(n)) s = 40;
+      else if (toks.every((t) => t.length < 4 ? words.some((w) => w.startsWith(t)) : words.some((w) => edits(t, w.slice(0, t.length + 1), t.length >= 8 ? 2 : 1) <= (t.length >= 8 ? 2 : 1)))) s = 20;
+      return { u, s };
+    }).filter((m) => m.s > 0).sort((a, b) => b.s - a.s).slice(0, 6);
+  }
+
+  const PUBLIC_MAIL = ["gmail.com", "outlook.com", "hotmail.com", "yahoo.com", "icloud.com", "live.com"];
+  function mailTypo(email) {
+    const [user, dom] = email.split("@");
+    if (!user || !dom || PUBLIC_MAIL.includes(dom)) return null;
+    const hit = PUBLIC_MAIL.find((d) => edits(dom, d, 2) <= 2);
+    return hit ? `${user}@${hit}` : null;
+  }
+  const initials = (name) => (name || "").trim().split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0].toUpperCase()).join("");
+  // Country code and number are separate; UAE is the default, India right after.
+  const CODES = [["+971", "UAE", "AE"], ["+91", "India", "IN"], ...[
+    ["+93", "Afghanistan", "AF"], ["+213", "Algeria", "DZ"], ["+61", "Australia", "AU"], ["+973", "Bahrain", "BH"], ["+880", "Bangladesh", "BD"],
+    ["+86", "China", "CN"], ["+20", "Egypt", "EG"], ["+251", "Ethiopia", "ET"], ["+33", "France", "FR"], ["+49", "Germany", "DE"],
+    ["+62", "Indonesia", "ID"], ["+98", "Iran", "IR"], ["+964", "Iraq", "IQ"], ["+39", "Italy", "IT"], ["+962", "Jordan", "JO"],
+    ["+254", "Kenya", "KE"], ["+965", "Kuwait", "KW"], ["+961", "Lebanon", "LB"], ["+60", "Malaysia", "MY"], ["+212", "Morocco", "MA"],
+    ["+977", "Nepal", "NP"], ["+234", "Nigeria", "NG"], ["+968", "Oman", "OM"], ["+92", "Pakistan", "PK"], ["+970", "Palestine", "PS"],
+    ["+63", "Philippines", "PH"], ["+974", "Qatar", "QA"], ["+7", "Russia or Kazakhstan", "RU"], ["+966", "Saudi Arabia", "SA"],
+    ["+65", "Singapore", "SG"], ["+27", "South Africa", "ZA"], ["+94", "Sri Lanka", "LK"], ["+249", "Sudan", "SD"], ["+963", "Syria", "SY"],
+    ["+216", "Tunisia", "TN"], ["+90", "Turkey", "TR"], ["+256", "Uganda", "UG"], ["+44", "UK", "GB"], ["+1", "US or Canada", "US"],
+    ["+967", "Yemen", "YE"],
+  ]];
+  const CODE_LIST = CODES.map((c) => c[0]).sort((a, b) => b.length - a.length);
+  // E.164: at most 15 digits including the country code. UAE mobiles are 5X XXX XXXX.
+  function phoneE164(code, num) {
+    const d = (num || "").replace(/\D/g, "").replace(/^0/, "");
+    if (!/^\+[1-9]\d{0,3}$/.test(code || "")) return null;
+    const ok = code === "+971" ? /^5\d{8}$/.test(d) : code === "+91" || code === "+1" ? /^\d{10}$/.test(d) : /^\d{6,12}$/.test(d);
+    return ok && code.length - 1 + d.length <= 15 ? code + d : null;
+  }
+
+
+  function registration(e, host) {
+    // A club can run its own Microsoft Form instead: set "formUrl" on the event in events.js.
+    if (e.formUrl) {
+      host.innerHTML = `
+        <div class="reg-card">
+          <h2 class="h2" id="reg-h">Register for ${esc(e.name)}</h2>
+          <p class="lede">The ${esc(e.hosts.map((h) => clubs[h]).join(" and "))} ${e.hosts.length > 1 ? "take" : "takes"} registrations for ${esc(e.name)} on an official form. ${esc(teamLine(e))}.</p>
+          <a class="btn" href="${esc(e.formUrl)}" target="_blank" rel="noopener">Open the registration form</a>
+        </div>`;
+      return;
+    }
+    const [lo, hi] = e.team;
+    const key = `inara-draft-${e.slug}`;
+    const one = solo(e);
+    let draft = null;
+    try { draft = JSON.parse(localStorage.getItem(key)); } catch (_) {}
+    const state = draft || { team: "", uni: "", uniOther: false, count: lo, people: [], optin: false };
+    state.count = Math.max(lo, Math.min(hi, state.count || lo));
+    // 8 to 64 characters of letters, digits, dot, dash and underscore: what the backend accepts
+    const formId = crypto.randomUUID ? crypto.randomUUID() : (Date.now().toString(36) + Math.random().toString(36).slice(2, 12)).padEnd(12, "0");
+    let sending = false, touched = new Set(), tried = false;
+
+    const sizes = Array.from({ length: hi - lo + 1 }, (_, i) => lo + i);
+    const uniField = `<div class="field" data-f="uni"><label for="uni">University</label><p class="err"></p>
+              <input class="input" id="uni" type="text" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="uni-list" aria-describedby="uni-hint" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="next" placeholder="Start typing, like NYUAD or Khalifa" value="${esc(state.uni)}">
+              <span class="sr" id="uni-hint">${one ? "Your university." : "One university for the whole team."} Suggestions appear as you type.</span>
+              <ul class="combo-list" id="uni-list" role="listbox" aria-label="Universities" hidden></ul>
+              <div class="sr" role="status" aria-live="polite"></div></div>`;
+    const sizeSec = one ? "" : `
+          <section class="reg-sec" aria-labelledby="s-size">
+            <h3 class="sec-t" id="s-size">Team size</h3>
+            <div class="seg" role="radiogroup" aria-labelledby="s-size">${sizes.map((n) => `<label><input type="radio" name="count" value="${n}" ${n === state.count ? "checked" : ""}><span>${n} people</span></label>`).join("")}</div>
+          </section>`;
+    host.innerHTML = `
+      <div class="reg-grid">
+        <form class="reg-form" id="reg-form" novalidate>
+          <h2 class="h2" id="reg-h">${one ? "Register" : "Register your team"}</h2>
+          <p class="lede">For ${esc(e.name)}${one ? "" : `: ${esc(teamLine(e).toLowerCase())}`}${known(e.day) ? `, on ${esc(e.day)}` : ""}. <a href="#about" data-tab="about">About ${esc(e.name)}</a>${e.guidelines ? ` or read the <a href="${esc(e.guidelines)}" target="_blank" rel="noopener">guidelines</a>` : ""}</p>
+          ${draft ? `<p class="notice">We kept what you typed last time. <button type="button" class="linkish" data-reset>Start over</button></p>` : ""}
+
+          ${one ? `
+          <section class="reg-sec" aria-labelledby="s-members">
+            <h3 class="sec-t" id="s-members">Your details</h3>
+            <div id="members"></div>
+            ${uniField}
+          </section>` : `
+          <section class="reg-sec" aria-labelledby="s-team">
+            <h3 class="sec-t" id="s-team">Your team</h3>
+            <div class="field" data-f="team"><label for="team">Team name</label><p class="err"></p>
+              <input class="input" id="team" maxlength="40" autocomplete="off" value="${esc(state.team)}"></div>
+            ${uniField}
+          </section>
+          ${sizeSec}
+          <section class="reg-sec" aria-labelledby="s-members">
+            <h3 class="sec-t" id="s-members">Members</h3>
+            <div id="members"></div>
+          </section>`}
+
+          <section class="reg-sec">
+            <label class="checkline"><input type="checkbox" id="optin" ${state.optin ? "checked" : ""}><span>Email me about future IIT Delhi Abu Dhabi events</span></label>
+            <p class="fine">Photos and videos are taken at the fest and may be shared by IIT Delhi Abu Dhabi. If ${one ? "you" : "someone on your team"} would rather not appear, tell us at the desk on the day.</p>
+          </section>
+
+          <input type="text" name="website" id="website" tabindex="-1" autocomplete="off" aria-hidden="true" class="trap">
+          <datalist id="codes">${CODES.map(([c, n]) => `<option value="${c}" label="${n}"></option>`).join("")}</datalist>
+          <p class="form-err" id="form-err" role="alert" hidden></p>
+          <div class="submit-row"><button class="btn" type="submit">${one ? "Register" : "Register team"}</button><span class="saved" id="progress" aria-live="polite"></span></div>
+        </form>
+
+        <aside class="team-card${one ? " solo" : ""}" aria-label="${one ? "Your registration so far" : "Your team so far"}">
+          <p class="tc-event">${esc(e.name)}</p>
+          <p class="tc-team" id="tc-team"></p>
+          <p class="tc-uni" id="tc-uni"></p>
+          <ul class="tc-members" id="tc-members"></ul>
+          <div class="tc-bar" aria-hidden="true"><span id="tc-fill"></span></div>
+          <p class="tc-prog" id="tc-prog"></p>
+          <button class="btn" type="submit" form="reg-form">${one ? "Register" : "Register team"}</button>
+        </aside>
+      </div>`;
+
+    const form = host.querySelector("form"), members = host.querySelector("#members");
+    const $ = (s) => host.querySelector(s);
+    const formErr = (msg) => { const p = $("#form-err"); p.textContent = msg; p.hidden = !msg; if (msg) p.scrollIntoView({ block: "center", behavior: smooth() }); };
+    const save = () => { try { localStorage.setItem(key, JSON.stringify(state)); } catch (_) {} };
+    host.querySelector("[data-reset]")?.addEventListener("click", () => { try { localStorage.removeItem(key); } catch (_) {} registration(e, host); });
+
+    // ----- members -----
+    const leadDomain = () => { const d = (state.people[0]?.email || "").split("@")[1]; return d && !PUBLIC_MAIL.includes(d) ? d : ""; };
+    function drawMembers() {
+      while (state.people.length < hi) state.people.push({ name: "", email: "", code: "+971", phone: "" });
+      state.people.forEach((p) => (p.code = p.code || "+971"));
+      members.innerHTML = state.people.slice(0, state.count).map((p, i) => {
+        const id = (f) => `m${i}-${f}`, lead = i === 0, ac = (t) => (lead ? t : "off");
+        return `
+          <fieldset class="member" data-i="${i}">
+            <legend class="sr">${one ? "Your details" : lead ? "Member 1, team lead" : `Member ${i + 1}`}</legend>
+            <div class="member-head"><span class="av" aria-hidden="true">${initials(p.name) || i + 1}</span><h4>${one ? "You" : lead ? "Team lead" : `Member ${i + 1}`}</h4><span class="tick" aria-hidden="true"></span></div>
+            <div class="field" data-f="${id("name")}"><label for="${id("name")}">Full name, as on the certificate</label><p class="err"></p>
+              <input class="input" id="${id("name")}" data-k="name" maxlength="120" autocomplete="${ac("name")}" autocapitalize="words" spellcheck="false" value="${esc(p.name)}"></div>
+            <div class="row2">
+              <div class="field" data-f="${id("email")}"><label for="${id("email")}">Email</label><p class="err"></p>
+                <input class="input" id="${id("email")}" data-k="email" type="email" inputmode="email" maxlength="254" spellcheck="false" autocapitalize="off" autocomplete="${ac("email")}" placeholder="${!lead && leadDomain() ? "name@" + leadDomain() : ""}" value="${esc(p.email)}">
+                <p class="suggest" hidden></p></div>
+              <div class="field" data-f="${id("phone")}"><label for="${id("phone")}">WhatsApp</label><p class="err"></p>
+                <div class="phone">
+                  <span class="code"><input class="input" id="${id("code")}" data-k="code" list="codes" inputmode="tel" maxlength="5" autocomplete="${ac("tel-country-code")}" aria-label="${one ? "Country code" : `Member ${i + 1} country code`}" value="${esc(p.code)}"></span>
+                  <input class="input" id="${id("phone")}" data-k="phone" type="text" inputmode="tel" maxlength="24" autocomplete="${ac("tel-national")}" placeholder="${p.code === "+971" ? "50 123 4567" : ""}" value="${esc(p.phone)}">
+                </div></div>
+            </div>
+          </fieldset>`;
+      }).join("");
+      progress();
+    }
+    drawMembers();
+
+    // ----- validation -----
+    const RULES = {
+      team: () => (state.team.trim() ? "" : "Enter a team name"),
+      uni: () => (state.uni.trim() ? "" : "Choose your university, or type its name"),
+    };
+    function memberError(i, k) {
+      const p = state.people[i];
+      if (k === "name") return p.name.trim().length >= 2 ? "" : "Enter the full name";
+      if (k === "email") {
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(p.email.trim())) return "Enter an email address";
+        const dup = state.people.slice(0, state.count).findIndex((q, j) => j !== i && q.email.trim().toLowerCase() === p.email.trim().toLowerCase());
+        return dup >= 0 && dup < i ? "Each member needs their own email" : "";
+      }
+      if (k === "phone") return phoneE164(p.code, p.phone) ? "" : !/^\+[1-9]\d{0,3}$/.test(p.code || "") ? "Enter a country code, like +971" : p.code === "+971" ? "Enter a UAE mobile, like 50 123 4567" : "Enter the number after the country code";
+      return "";
+    }
+    function show(fieldKey, msg) {
+      const f = host.querySelector(`[data-f="${fieldKey}"]`); if (!f) return;
+      const input = f.querySelector("input:not([type=radio]), select");
+      f.classList.toggle("bad", !!msg);
+      f.querySelector(".err").textContent = msg;
+      if (input) input.setAttribute("aria-invalid", msg ? "true" : "false");
+    }
+    function check(fieldKey) {
+      const m = fieldKey.match(/^m(\d+)-(\w+)$/);
+      const msg = m ? memberError(+m[1], m[2]) : RULES[fieldKey]?.() || "";
+      show(fieldKey, msg);
+      return msg;
+    }
+    function progress() {
+      const ready = state.people.slice(0, state.count).map((_, i) => ["name", "email", "phone"].every((k) => !memberError(i, k)));
+      const done = ready.filter(Boolean).length, line = one ? (done ? "Details ready" : "Details needed") : `${done} of ${state.count} members ready`;
+      $("#progress").textContent = line;
+      $("#tc-prog").textContent = line;
+      $("#tc-fill").style.width = `${(done / state.count) * 100}%`;
+      const who = one ? (state.people[0]?.name || "").trim() : state.team.trim();
+      $("#tc-team").textContent = who || (one ? "Your name" : "Your team");
+      $("#tc-team").classList.toggle("empty", !who);
+      $("#tc-uni").textContent = state.uni.trim() || "University";
+      $("#tc-uni").classList.toggle("empty", !state.uni.trim());
+      $("#tc-members").innerHTML = state.people.slice(0, state.count).map((p, i) =>
+        `<li class="${ready[i] ? "ok" : ""}"><span class="av">${esc(initials(p.name) || i + 1)}</span><span class="nm">${esc(p.name.trim() || (i ? `Member ${i + 1}` : "Team lead"))}</span>${ready[i] ? '<span class="tick"></span>' : ""}</li>`).join("");
+      members.querySelectorAll(".member").forEach((m, i) => { m.classList.toggle("ok", !!ready[i]); m.querySelector(".av").textContent = initials(state.people[i].name) || i + 1; });
+    }
+
+    // ----- input wiring -----
+    form.addEventListener("input", (ev) => {
+      const t = ev.target, mi = t.closest(".member")?.dataset.i;
+      if (t.id === "team") state.team = t.value;
+      else if (t.id === "optin") state.optin = t.checked;
+      else if (mi !== undefined && t.dataset.k) {
+        const p = state.people[+mi];
+        if (t.dataset.k === "phone") {
+          // a pasted +44 7700... picks the country and keeps only the number
+          const raw = t.value.trim().replace(/^00/, "+").replace(/[^\d+]/g, "");
+          const c = raw.startsWith("+") && CODE_LIST.find((x) => raw.startsWith(x));
+          if (c) { p.code = c; host.querySelector(`#m${mi}-code`).value = c; t.value = raw.slice(c.length); }
+          else t.value = t.value.replace(/[^\d ]/g, "");
+        }
+        if (t.dataset.k === "code") {
+          // always a plus and up to four digits
+          t.value = "+" + t.value.replace(/\D/g, "").slice(0, 4);
+          host.querySelector(`#m${mi}-phone`).placeholder = t.value === "+971" ? "50 123 4567" : "";
+        }
+        p[t.dataset.k] = t.value;
+      }
+      const fk = t.closest(".field")?.dataset.f;
+      if (fk && host.querySelector(`[data-f="${fk}"]`).classList.contains("bad")) check(fk);
+      progress(); save();
+    });
+    form.addEventListener("change", (ev) => {
+      const t = ev.target;
+      if (t.name === "count") { state.count = +t.value; drawMembers(); live(`${state.count} member sections shown`); save(); }
+      if (t.id === "optin") { state.optin = t.checked; save(); }
+    });
+    form.addEventListener("focusout", (ev) => {
+      const t = ev.target, fk = t.closest(".field")?.dataset.f;
+      if (!fk || fk === "uni" || fk === "count") return;
+      if (t.dataset.k === "name") { t.value = t.value.replace(/\s+/g, " ").trim(); state.people[+t.closest(".member").dataset.i].name = t.value; }
+      if (t.value || tried) { touched.add(fk); check(fk); }
+      if (t.dataset.k === "email") {
+        const s = t.closest(".field").querySelector(".suggest"), fix = mailTypo(t.value.trim().toLowerCase());
+        s.hidden = !fix;
+        if (fix) { s.innerHTML = `Did you mean <button type="button">${esc(fix)}</button>?`; s.querySelector("button").onclick = () => { t.value = fix; state.people[+t.closest(".member").dataset.i].email = fix; s.hidden = true; check(fk); save(); }; }
+        if (t.closest(".member").dataset.i === "0") members.querySelectorAll('[data-k="email"]').forEach((x, j) => j && (x.placeholder = leadDomain() ? "name@" + leadDomain() : ""));
+      }
+      save();
+    });
+
+    // ----- university combobox (WAI-ARIA list autocomplete, manual selection) -----
+    const uni = $("#uni"), list = $("#uni-list"), status = host.querySelector('[role="status"]');
+    let opts = [], active = -1, liveTimer, typingOwn = false;
+    function live(msg) { clearTimeout(liveTimer); liveTimer = setTimeout(() => (status.textContent = msg), 300); }
+    function openList() {
+      const q = uni.value, hits = matchUnis(q);
+      opts = hits.map((h) => ({ label: h.u.name, other: false }));
+      if (q.trim() && !opts.some((o) => norm(o.label) === norm(q))) opts.push({ label: q.trim(), other: true });
+      if (!q.trim()) opts.push({ label: "", other: true, blank: true });
+      const n = norm(q);
+      list.innerHTML = opts.map((o, i) => {
+        const label = o.blank ? `My university isn't listed<small>Type its full name instead</small>` : o.other ? `Use “${esc(o.label)}”<small>My university isn't listed</small>` : n ? esc(o.label).replace(new RegExp(`(${n.split(" ").map((t) => t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})`, "ig"), "<mark>$1</mark>") : esc(o.label);
+        return `<li role="option" id="uni-opt-${i}" class="${o.other ? "other" : ""}" aria-selected="false">${label}</li>`;
+      }).join("");
+      list.hidden = !opts.length; uni.setAttribute("aria-expanded", String(!!opts.length));
+      highlight(q.trim() && opts.length && !opts[0].other ? 0 : -1);
+      const real = opts.filter((o) => !o.other).length;
+      live(real ? `${real} universit${real === 1 ? "y" : "ies"} found. Use up and down to review, Enter to pick.` : "No match. Press Enter to use what you typed.");
+    }
+    function closeList() { list.hidden = true; uni.setAttribute("aria-expanded", "false"); uni.removeAttribute("aria-activedescendant"); active = -1; }
+    function highlight(i) {
+      active = i;
+      list.querySelectorAll("li").forEach((li, j) => li.setAttribute("aria-selected", String(j === i)));
+      if (i >= 0) { uni.setAttribute("aria-activedescendant", `uni-opt-${i}`); list.children[i].scrollIntoView({ block: "nearest" }); }
+      else uni.removeAttribute("aria-activedescendant");
+    }
+    function choose(i) {
+      const o = opts[i]; if (!o) return;
+      if (o.blank) {
+        // switch the box to free typing for an unlisted university
+        uni.value = ""; state.uni = ""; state.uniOther = true; typingOwn = true;
+        uni.placeholder = "Type your university's full name"; closeList(); uni.focus(); return;
+      }
+      uni.value = o.label; state.uni = o.label; state.uniOther = o.other;
+      closeList(); save(); if (touched.has("uni") || tried) check("uni");
+    }
+    uni.addEventListener("input", () => { state.uni = uni.value; state.uniOther = true; if (!typingOwn || matchUnis(uni.value).some((m) => m.s >= 60)) openList(); else closeList(); });
+    uni.addEventListener("focus", () => { if (!uni.value && !typingOwn) openList(); });
+    uni.addEventListener("click", () => { if (list.hidden) openList(); });
+    uni.addEventListener("keydown", (ev) => {
+      const n = opts.length;
+      if (ev.key === "ArrowDown") { ev.preventDefault(); if (list.hidden) openList(); if (!ev.altKey) highlight(n ? (active + 1) % n : -1); }
+      else if (ev.key === "ArrowUp") { ev.preventDefault(); if (list.hidden) openList(); highlight(n ? (active - 1 + n) % n : -1); }
+      else if (ev.key === "Enter" && !list.hidden) { ev.preventDefault(); choose(active >= 0 ? active : opts.length - 1); }
+      else if (ev.key === "Escape") { if (!list.hidden) closeList(); else { uni.value = ""; state.uni = ""; } }
+    });
+    uni.addEventListener("blur", () => setTimeout(() => {
+      if (!list.hidden && active >= 0) choose(active);
+      else closeList();
+      // a typed name that matches a listed university exactly becomes that university
+      const exact = universities.find((u) => norm(u.name) === norm(uni.value) || u.aka.map(norm).includes(norm(uni.value)));
+      if (exact) { uni.value = exact.name; state.uni = exact.name; state.uniOther = false; }
+      if (uni.value) { touched.add("uni"); check("uni"); }
+      save();
+    }, 120));
+    list.addEventListener("pointerdown", (ev) => { const li = ev.target.closest("li"); if (!li) return; ev.preventDefault(); choose([...list.children].indexOf(li)); });
+
+    // ----- submit -----
+    form.addEventListener("submit", async (ev) => {
+      ev.preventDefault();
+      if (sending) return;
+      tried = true;
+      const keys = [...(one ? [] : ["team"]), "uni", ...state.people.slice(0, state.count).flatMap((_, i) => ["name", "email", "phone"].map((k) => `m${i}-${k}`))];
+      const errs = keys.map((k) => [k, check(k)]).filter(([, m]) => m);
+      if (errs.length) {
+        const f = host.querySelector(`[data-f="${errs[0][0]}"]`);
+        f.scrollIntoView({ block: "center", behavior: smooth() });
+        (f.querySelector("input:not([type=radio])") || f.querySelector("input")).focus({ preventScroll: true });
+        live(`${errs.length} field${errs.length > 1 ? "s" : ""} to fix`);
+        return;
+      }
+      formErr(""); document.title = `${e.name}, Inara 2026`;
+      if (PREVIEW) {
+        host.innerHTML = `
+          <div class="reg-card preview-done">
+            <p class="kicker">Prototype</p>
+            <h2 class="h2" id="reg-h" tabindex="-1">Registration isn't open yet</h2>
+            <p class="lede">This is a prototype of the Inara site. Registrations open once Inara is approved. Nothing you typed was sent or saved.</p>
+            <a class="btn ghost" href="#about" data-tab="about">Back to ${esc(e.name)}</a>
+          </div>`;
+        try { localStorage.removeItem(key); } catch (_) {}
+        host.scrollIntoView({ block: "start" }); host.querySelector("#reg-h").focus({ preventScroll: true });
+        return;
+      }
+      const entry = {
+        fest: "inara", id: formId, event: e.slug, team: one ? "" : state.team.trim(),
+        university: state.uni.trim(), universityListed: !state.uniOther, optin: !!state.optin,
+        members: state.people.slice(0, state.count).map((p) => ({ name: p.name.trim(), email: p.email.trim().toLowerCase(), phone: phoneE164(p.code, p.phone) })),
+      };
+      const btn = form.querySelector("[type=submit]");
+      sending = true; btn.disabled = true; btn.setAttribute("aria-busy", "true"); btn.textContent = "Registering…";
+      try {
+        if (API) {
+          const res = await fetch(`${API}/register`, { method: "POST", headers: { "Content-Type": "application/json", "Idempotency-Key": formId }, body: JSON.stringify({ ...entry, website: $("#website").value }) });
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok) {
+            const x = new Error(res.status === 503 ? "The registration service is busy. Try again in a minute" : data.error || "We couldn't save your registration");
+            x.shown = true; throw x;
+          }
+          entry.ref = data.ref;
+        }
+        try { localStorage.removeItem(key); } catch (_) {}
+        done(e, host, entry);
+      } catch (err) {
+        sending = false; btn.disabled = false; btn.removeAttribute("aria-busy"); btn.textContent = one ? "Register" : "Register team";
+        const msg = err.shown ? err.message.replace(/[.!?]+$/, "") + "." : "We couldn't reach the registration service. Check your connection and try again.";
+        formErr(`${msg} Your details are still here.`);
+      }
+    });
+  }
+
+
+  function done(e, host, entry) {
+    const one = solo(e);
+    host.innerHTML = `
+      <div class="reg-card">
+        <p class="kicker">You're in</p>
+        <h2 class="h2" id="reg-h">${one ? `You're registered for ${esc(e.name)}` : `${esc(entry.team)} is registered for ${esc(e.name)}`}</h2>
+        <p class="lede">${entry.ref ? `Reference <strong>${esc(entry.ref)}</strong>. ` : ""}${esc(entry.university)}. ${entry.members.map((m) => esc(m.name)).join(", ")}.</p>
+        <ol class="next">
+          <li><h3>Check your email</h3><p>A confirmation email will follow. If you don't see it, look in spam.</p></li>
+          ${e.prelim ? `<li><h3>Get ready for the online round</h3><p>${esc(e.prelim)} We'll email the details.</p></li>` : `<li><h3>Watch for the schedule</h3><p>We email the timing before the fest.</p></li>`}
+          <li><h3>Got something wrong?</h3><p>Reply to the confirmation email with the fix and we'll update it.</p></li>
+        </ol>
+        ${entry.optin ? `<p class="fine">You'll also hear from us about future IIT Delhi Abu Dhabi events.</p>` : ""}
+        <a class="btn ghost" href="${link(`${root}#events`)}">See more events</a>
+      </div>`;
+    host.scrollIntoView({ block: "start" });
+    host.querySelector("#reg-h").setAttribute("tabindex", "-1"); host.querySelector("#reg-h").focus({ preventScroll: true });
+  }
+
+  // ================= boot =================
+  if (page === "home") { home(); wireSlides(); }
+  else {
+    const e = bySlug[document.body.dataset.event];
+    if (e) eventPage(e);
+    document.querySelectorAll("[data-home]").forEach((a) => (a.href = link(a.getAttribute("href"))));
+  }
+  mountScenes();
+  // the bar turns solid once the first stage has scrolled away
+  const onScroll = () => { const s = main.querySelector(".stage"); bar.classList.toggle("solid", !s || scrollY > s.offsetHeight - 70); };
+  addEventListener("scroll", onScroll, { passive: true });
+  onScroll();
+  // a refresh starts at the top instead of jumping back down to an old anchor
+  if ("scrollRestoration" in history) history.scrollRestoration = "manual";
+  const reload = performance.getEntriesByType("navigation")[0]?.type === "reload";
+  if (reload) { if (page === "home" && location.hash) history.replaceState(null, "", location.pathname + location.search); scrollTo(0, 0); }
+  else if (page === "home" && location.hash) document.getElementById(location.hash.slice(1))?.scrollIntoView();
+})();

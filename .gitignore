@@ -1,0 +1,14 @@
+.vercel
+.DS_Store
+shots/
+server/
+__pycache__/
+# old placeholder events, no longer on the site
+quiz-night/
+light-frames/
+live-canvas/
+open-mic/
+dance-showcase/
+mono-act/
+short-films/
+spoken-word/
