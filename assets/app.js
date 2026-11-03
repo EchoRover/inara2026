@@ -1,5 +1,5 @@
 (() => {
-  const { clubs, short = {}, events, universities } = window.INARA;
+  const { clubs, short = {}, events, universities, days = [] } = window.INARA;
   const main = document.getElementById("main");
   const bar = document.getElementById("bar");
   const page = document.body.dataset.page;
@@ -23,7 +23,17 @@
   const extras = events.filter(free);
   const status = (e) => (e.open ? "Registration open" : free(e) ? "Free to attend" : "Opens soon");
   const known = (v) => v && v !== "TBC";
-  const dayLine = (e) => (known(e.day) ? e.day : "Day to be confirmed");
+  // "time" is [start, end] in 24-hour UAE time, like ["18:00", "20:00"]
+  const timed = (e) => known(e.day) && Array.isArray(e.time) && e.time.length === 2;
+  const mins = (t) => { const [h, m] = t.split(":").map(Number); return h * 60 + (m || 0); };
+  const clock = (m, ampm = true) => { const h = Math.floor(m / 60) % 24, mm = m % 60; return `${h % 12 || 12}${mm ? ":" + String(mm).padStart(2, "0") : ""}${ampm ? (h < 12 ? " AM" : " PM") : ""}`; };
+  // "6 to 8 PM", "10 AM to 2 PM"
+  const timeRange = (e) => { const [a, b] = e.time.map(mins); return `${clock(a, a < 720 !== b < 720)} to ${clock(b)}`; };
+  const dayLine = (e) => (known(e.day) ? e.day + (timed(e) ? `, ${timeRange(e)}` : "") : "Day to be confirmed");
+  // "Saturday 14 November" -> "Sat 14 Nov"
+  const shortDay = (d) => d.replace(/^(\w{3})\w*\s+(\d+)\s+(\w{3})\w*$/, "$1 $2 $3");
+  // a free show with a slot reads as its slot; a stall reads as how long it runs
+  const whenLine = (e) => (timed(e) ? dayLine(e) : dur(e));
   const tag = (e) => (e.placeholder ? `<span class="t-ph">Placeholder</span>` : "");
   // Opened straight from disk, folders don't resolve to index.html, so spell it out.
   const local = location.protocol === "file:";
@@ -70,7 +80,7 @@
           <h1 class="hero-name">Inara <span class="yr">2026</span></h1>
           <span class="hero-inst">The cultural fest of IIT Delhi Abu Dhabi</span>
           <span class="hero-meta">13 to 15 November 2026</span>
-          <div class="hero-actions"><a class="btn" href="#events">See the events</a></div>
+          <div class="hero-actions"><a class="btn" href="#events">See the events</a><a class="btn ghost" href="${link("schedule/")}">See the schedule</a></div>
         </div>
       </section>
 
@@ -84,6 +94,7 @@
               <span class="t-name">${esc(e.name)}</span>
               <span class="t-host">${esc(hosts(e))}</span>
               ${e.open ? `<span class="t-facts">${esc([teamLine(e), hasPrizes(e) ? `${pool(e)} in prizes` : ""].filter(Boolean).join(", "))}</span>` : free(e) ? `<span class="t-facts">${esc([dur(e), known(e.venue) ? e.venue : ""].filter(Boolean).join(", "))}</span>` : ""}
+              ${timed(e) ? `<span class="t-when">${esc(`${shortDay(e.day)}, ${timeRange(e)}`)}</span>` : ""}
             </a></li>`).join("")}</ul>
         </div>
       </section>
@@ -131,7 +142,7 @@
   function band(e) {
     const facts = e.open
       ? [teamLine(e), hasPrizes(e) ? `${pool(e)} in prizes` : "", dayLine(e), e.prelim ? "Online round first" : ""]
-      : [dur(e), free(e) && known(e.venue) ? e.venue : "", status(e)];
+      : [whenLine(e), free(e) && known(e.venue) ? e.venue : "", status(e)];
     const reg = e.open ? `<a class="btn ghost" href="${eventHref(e, "#register")}">${solo(e) ? "Register" : "Register your team"}</a>` : "";
     return `
       <section class="stage band" id="${esc(e.slug)}-band" aria-labelledby="${esc(e.slug)}-h" aria-roledescription="slide" aria-label="${esc(e.name)}">
@@ -205,7 +216,7 @@
       .filter((r) => r.score > 1).sort((a, b) => b.score - a.score).slice(0, 3);
     const more = recs.length ? `<div class="narrow" style="padding-bottom:96px"><h2 class="h2" style="margin-top:56px">You might also like</h2>
       <ul class="more">${recs.map((r) => `<li><a href="${eventHref(r.x)}">${esc(r.x.name)}</a><span>${esc(hosts(r.x))}</span></li>`).join("")}</ul></div>` : `<div style="padding-bottom:96px"></div>`;
-    const facts = e.open ? [teamLine(e), hasPrizes(e) ? `${pool(e)} in prizes` : "", dayLine(e)].filter(Boolean) : [dur(e), free(e) && known(e.venue) ? e.venue : "", status(e)].filter(Boolean);
+    const facts = e.open ? [teamLine(e), hasPrizes(e) ? `${pool(e)} in prizes` : "", dayLine(e)].filter(Boolean) : [whenLine(e), free(e) && known(e.venue) ? e.venue : "", status(e)].filter(Boolean);
     const phNote = e.placeholder ? `<p class="ph-note"><b>Placeholder.</b> This event is a stand-in until the club confirms the details.</p>` : "";
     const top = `
       <section class="stage ev-top" aria-labelledby="ev-h">
@@ -225,7 +236,7 @@
           ${phNote}
           ${free(e) ? `<p class="lead">${esc(e.blurb || "")}</p>
           <dl class="panel" style="margin-top:32px">
-            <div><dt>When</dt><dd>${known(e.day) ? esc(e.day) + ", " : ""}${esc(dur(e))}</dd></div>
+            <div><dt>When</dt><dd>${timed(e) ? esc(dayLine(e)) : `${known(e.day) ? esc(e.day) + ", " : ""}${esc(dur(e))}`}</dd></div>
             <div><dt>Where</dt><dd>${known(e.venue) ? esc(e.venue) : "To be confirmed"}</dd></div>
             <div><dt>Entry</dt><dd>Free, no registration needed</dd></div>
           </dl>` : `<p class="lead">The ${esc(e.hosts.map((h) => clubs[h]).join(" and "))} ${e.hosts.length > 1 ? "are" : "is"} putting the final details together. Registration opens on this page soon.</p>`}
@@ -237,7 +248,7 @@
       e.prelim && ["Online round", e.prelim],
       e.prelim && ["Finalists announced", "We email everyone who is invited on to the event."],
       !e.prelim && [one ? "You're confirmed" : "Teams confirmed", "We email the schedule before the fest."],
-      [known(e.day) ? `The event, ${e.day}` : "The event, day to be confirmed", `${e.final} ${e.bring || ""}`],
+      [known(e.day) ? `The event, ${dayLine(e)}` : "The event, day to be confirmed", `${e.final} ${e.bring || ""}`],
     ].filter(Boolean);
     const places = ["1st place", "2nd place", "3rd place"];
     main.innerHTML = `${top}
@@ -264,7 +275,7 @@
               <dl>
                 <div><dt>${one ? "Entry" : "Team size"}</dt><dd>${one ? "Individual" : e.team[0] === e.team[1] ? `${e.team[0]} people` : `${e.team[0]} to ${e.team[1]} people`}</dd></div>
                 ${e.prelim ? `<div><dt>Online round</dt><dd>Yes, before the fest</dd></div>` : ""}
-                <div><dt>When</dt><dd>${known(e.day) ? esc(e.day) : "To be confirmed"}, ${esc(dur(e))}</dd></div>
+                <div><dt>When</dt><dd>${timed(e) ? esc(dayLine(e)) : `${known(e.day) ? esc(e.day) : "To be confirmed"}, ${esc(dur(e))}`}</dd></div>
                 <div><dt>Where</dt><dd>${known(e.venue) ? esc(e.venue) : "To be confirmed"}</dd></div>
                 ${hasPrizes(e) ? `<div><dt>Prize pool</dt><dd>${pool(e)}</dd></div>` : ""}
               </dl>
@@ -694,13 +705,175 @@
     host.querySelector("#reg-h").setAttribute("tabindex", "-1"); host.querySelector("#reg-h").focus({ preventScroll: true });
   }
 
+  // ================= schedule: every event, day by day =================
+  // Built from "days" and each event's "day" and "time" in events.js, so it never needs editing by hand.
+  function schedulePage() {
+    document.title = "Schedule, Inara 2026";
+    const dayNames = days.map((d) => d.name);
+    const startOf = (e) => (timed(e) ? mins(e.time[0]) : Infinity);
+    const perDay = days
+      .map((d) => ({ ...d, id: d.name.split(" ")[0].toLowerCase(), label: shortDay(d.name).replace(/\s+\w+$/, ""), list: events.filter((e) => e.day === d.name).sort((a, b) => startOf(a) - startOf(b)) }))
+      .filter((d) => d.list.length);
+    const loose = events.filter((e) => !dayNames.includes(e.day));
+    const allFest = loose.filter((e) => /through the fest/i.test(String(e.hours)));
+    const later = loose.filter((e) => !allFest.includes(e));
+    const slotted = perDay.flatMap((d) => d.list.filter(timed));
+    const openCount = events.filter((e) => e.open).length;
+    // UAE time is GMT+4 all year, so each slot is one fixed moment wherever the visitor is
+    const at = (date, m) => Date.parse(`${date}T00:00:00+04:00`) + m * 60000;
+    const span = (d, e) => `data-start="${at(d.date, mins(e.time[0]))}" data-end="${at(d.date, mins(e.time[1]))}"`;
+    const h0 = slotted.length ? Math.floor(Math.min(...slotted.map((e) => mins(e.time[0]))) / 60) : 0;
+    const h1 = slotted.length ? Math.ceil(Math.max(...slotted.map((e) => mins(e.time[1]))) / 60) : 0;
+    // events that overlap on the same day share the column side by side
+    function lanes(list) {
+      const ends = [], lane = new Map();
+      list.filter(timed).forEach((e) => {
+        const [s, en] = e.time.map(mins);
+        let i = ends.findIndex((x) => x <= s);
+        if (i < 0) i = ends.length;
+        ends[i] = en; lane.set(e, i);
+      });
+      return { lane, n: Math.max(1, ends.length) };
+    }
+
+    const top = `
+      <section class="stage ev-top sched-top" aria-labelledby="sc-h">
+        <canvas data-scene="lanterns" aria-hidden="true"></canvas>
+        <div class="stage-content">
+          <p class="kicker">Inara 2026</p>
+          <h1 class="big" id="sc-h">Schedule</h1>
+          <p class="tagline">Three days of quizzing, music, art, theatre and film.</p>
+          <p class="facts"><span>13 to 15 November 2026</span><span>${slotted.length} scheduled events</span>${allFest.length ? `<span>${allFest.length} stalls open all fest</span>` : ""}<span>All times UAE (GMT+4)</span></p>
+        </div>
+      </section>`;
+
+    const navItems = [
+      slotted.length && ["glance", "At a glance"],
+      ...perDay.map((d) => [d.id, d.label]),
+      allFest.length && ["all-fest", "All fest"],
+      later.length && ["later", "To be confirmed"],
+    ].filter(Boolean);
+    const nav = `
+      <nav class="tabs daynav" aria-label="Schedule sections">
+        <div class="wrap">${navItems.map(([id, t]) => `<a class="tab" href="#${id}">${esc(t)}</a>`).join("")}<span class="spacer"></span><span class="tz">All times UAE (GMT+4)</span></div>
+      </nav>`;
+
+    const glance = slotted.length ? `
+      <section class="section glance-sec" id="glance" aria-labelledby="glance-h">
+        <div class="wrap">
+          <h2 class="h2" id="glance-h">At a glance</h2>
+          <p class="lede">The whole fest on one clock. Tap an event to open its page.</p>
+          <div class="glance" style="--h0:${h0};--rows:${h1 - h0};--days:${perDay.length}">
+            <div class="g-axis" aria-hidden="true">${Array.from({ length: h1 - h0 + 1 }, (_, k) => h0 + k).filter((h) => (h - h0) % 2 === 0).map((h) => `<span style="--at:${h}">${clock(h * 60)}</span>`).join("")}</div>
+            ${perDay.map((d) => { const { lane, n } = lanes(d.list); return `
+            <div class="g-day">
+              <h3 class="g-head"><a href="#${d.id}">${esc(d.label)}</a></h3>
+              <div class="g-col" data-date="${d.date}">
+                ${d.list.filter(timed).map((e) => { const [s, en] = e.time.map(mins); return `<a class="g-ev scene-${e.scene}${en - s <= 90 ? " short" : ""}" href="${eventHref(e)}" ${span(d, e)} style="--s:${s / 60};--e:${en / 60};--lane:${lane.get(e)};--lanes:${n}"><b>${esc(e.name)}</b><span>${esc(timeRange(e))}</span></a>`; }).join("")}
+                <i class="g-now" hidden></i>
+              </div>
+            </div>`; }).join("")}
+          </div>
+        </div>
+      </section>` : "";
+
+    const row = (d, e) => `
+      <li class="slot scene-${e.scene}" ${timed(e) ? span(d, e) : ""}>
+        <div class="s-time">${timed(e) ? `<b>${clock(mins(e.time[0]))}</b><span>to ${clock(mins(e.time[1]))}</span>` : `<b>Time TBC</b><span>${esc(dur(e))}</span>`}</div>
+        <div class="s-body">
+          <span class="s-live" hidden></span>
+          <a class="s-name" href="${eventHref(e)}">${esc(e.name)}</a>
+          <p class="s-meta"><span>${esc(hosts(e))}</span>${known(e.venue) ? `<span>${esc(e.venue)}</span>` : ""}<span class="s-status">${status(e)}</span></p>
+        </div>
+        ${e.open ? `<a class="btn ghost s-btn" href="${eventHref(e, "#register")}">${solo(e) ? "Register" : "Register your team"}</a>` : ""}
+      </li>`;
+    const dayLede = (d) => {
+      const t = d.list.filter(timed), n = d.list.length;
+      const from = t.length ? `, ${clock(Math.min(...t.map((e) => mins(e.time[0]))))} to ${clock(Math.max(...t.map((e) => mins(e.time[1]))))}` : "";
+      return `${n} ${n === 1 ? "event" : "events"}${from}`;
+    };
+    const dayLists = perDay.map((d) => `
+      <section class="sched-day" id="${d.id}" aria-labelledby="${d.id}-h">
+        <div class="wrap">
+          <h2 class="h2" id="${d.id}-h">${esc(d.name)}</h2>
+          <p class="lede">${dayLede(d)}</p>
+          <ol class="slots">${d.list.map((e) => row(d, e)).join("")}</ol>
+        </div>
+      </section>`).join("");
+
+    const listOf = (list) => `<ul class="more">${list.map((e) => `<li><a href="${eventHref(e)}">${esc(e.name)}</a><span>${esc([hosts(e), known(e.venue) ? e.venue : "", list === later ? dur(e) : ""].filter(Boolean).join(", "))}</span></li>`).join("")}</ul>`;
+    const fest = allFest.length ? `
+      <section class="sched-day" id="all-fest" aria-labelledby="all-fest-h">
+        <div class="wrap">
+          <h2 class="h2" id="all-fest-h">All through the fest</h2>
+          <p class="lede">Stalls and workshops you can drop into on any day.${allFest.every(free) ? " Free, no registration needed." : ""}</p>
+          ${listOf(allFest)}
+        </div>
+      </section>` : "";
+    const tbc = later.length ? `
+      <section class="sched-day" id="later" aria-labelledby="later-h">
+        <div class="wrap">
+          <h2 class="h2" id="later-h">Still being scheduled</h2>
+          <p class="lede">The day and time for ${later.length === 1 ? "this one is" : "these are"} on the way.</p>
+          ${listOf(later)}
+        </div>
+      </section>` : "";
+    const end = openCount ? `
+      <section class="section sched-end">
+        <div class="wrap">
+          <h2 class="h2">Want to compete?</h2>
+          <p class="lede">Registration is open for ${openCount} ${openCount === 1 ? "competition" : "competitions"}. Pick one and sign up on its page.</p>
+          <a class="btn" href="${link(`${root}#events`)}">See the events</a>
+        </div>
+      </section>` : `<div style="padding-bottom:96px"></div>`;
+
+    main.innerHTML = top + nav + glance + dayLists + fest + tbc + end;
+
+    // Live during the fest: "On now" and "Up next" tags, earlier slots dimmed, and a line on the clock.
+    function live() {
+      const now = Date.now();
+      const els = [...main.querySelectorAll("[data-start]")];
+      if (!els.length) return;
+      const festLeft = now < Math.max(...els.map((el) => +el.dataset.end));
+      const nextStart = Math.min(...els.map((el) => +el.dataset.start).filter((s) => s > now));
+      els.forEach((el) => {
+        const s = +el.dataset.start, en = +el.dataset.end;
+        const on = now >= s && now < en;
+        const next = !on && s === nextStart && s - now < 864e5; // only once it is less than a day away
+        el.classList.toggle("on", on);
+        el.classList.toggle("past", festLeft && now >= en);
+        const t = el.querySelector(".s-live");
+        if (t) { t.hidden = !(on || next); t.textContent = on ? "On now" : next ? "Up next" : ""; }
+      });
+      main.querySelectorAll(".g-col").forEach((col) => {
+        const a = at(col.dataset.date, h0 * 60), b = at(col.dataset.date, h1 * 60), line = col.querySelector(".g-now");
+        line.hidden = !(now >= a && now <= b);
+        if (!line.hidden) line.style.setProperty("--t", String(h0 + (now - a) / 36e5));
+      });
+    }
+    live();
+    setInterval(live, 30000);
+
+    // the section you are reading is underlined in the bar
+    const navLinks = [...main.querySelectorAll(".daynav .tab")];
+    const targets = navLinks.map((a) => document.getElementById(a.hash.slice(1)));
+    const spy = () => {
+      let cur = -1;
+      targets.forEach((t, i) => { if (t && t.getBoundingClientRect().top < innerHeight * 0.4) cur = i; });
+      navLinks.forEach((a, i) => (i === cur ? a.setAttribute("aria-current", "true") : a.removeAttribute("aria-current")));
+    };
+    addEventListener("scroll", () => requestAnimationFrame(spy), { passive: true });
+    spy();
+  }
+
   // ================= boot =================
   if (page === "home") { home(); wireSlides(); }
+  else if (page === "schedule") schedulePage();
   else {
     const e = bySlug[document.body.dataset.event];
     if (e) eventPage(e);
-    document.querySelectorAll("[data-home]").forEach((a) => (a.href = link(a.getAttribute("href"))));
   }
+  document.querySelectorAll("[data-home]").forEach((a) => (a.href = link(a.getAttribute("href"))));
   mountScenes();
   // the bar turns solid once the first stage has scrolled away
   const onScroll = () => { const s = main.querySelector(".stage"); bar.classList.toggle("solid", !s || scrollY > s.offsetHeight - 70); };
@@ -709,6 +882,8 @@
   // a refresh starts at the top instead of jumping back down to an old anchor
   if ("scrollRestoration" in history) history.scrollRestoration = "manual";
   const reload = performance.getEntriesByType("navigation")[0]?.type === "reload";
-  if (reload) { if (page === "home" && location.hash) history.replaceState(null, "", location.pathname + location.search); scrollTo(0, 0); }
-  else if (page === "home" && location.hash) document.getElementById(location.hash.slice(1))?.scrollIntoView();
+  // (event pages handle their own #about / #register)
+  const anchored = page !== "event" && location.hash;
+  if (reload) { if (anchored) history.replaceState(null, "", location.pathname + location.search); scrollTo(0, 0); }
+  else if (anchored) document.getElementById(location.hash.slice(1))?.scrollIntoView();
 })();

@@ -416,3 +416,77 @@ body[data-page="event"] .bar { position: absolute; }
 .slides .band .stage-content { padding-top: 92px; padding-bottom: 104px; }
 @media (max-width: 860px) { .slides .band .stage-content { padding-top: 84px; padding-bottom: 96px; } }
 .slides .big { max-width: 18ch; }
+
+/* ---------- schedule page ---------- */
+.t-when { color: var(--ink); font-size: 0.88rem; font-weight: 600; }
+body[data-page="schedule"] .bar { position: absolute; }
+.sched-top { min-height: 64svh; }
+.daynav .wrap { overflow-x: auto; scrollbar-width: none; }
+.daynav .wrap::-webkit-scrollbar { display: none; }
+.daynav .tab { flex: none; white-space: nowrap; }
+.tab[aria-current="true"] { color: var(--ink); }
+.tab[aria-current="true"]::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 3px; border-radius: 3px; background: var(--accent); }
+.daynav .tz { flex: none; color: var(--ink-soft); font-size: 0.88rem; font-weight: 600; white-space: nowrap; }
+
+/* at a glance: every day side by side on one clock */
+.glance-sec { padding-bottom: 8px; scroll-margin-top: 64px; }
+.glance { --hr: 48px; display: grid; grid-template-columns: 56px repeat(var(--days), minmax(0, 1fr)); gap: 0 12px; margin-top: 8px; }
+.g-axis { position: relative; margin-top: 44px; height: calc(var(--rows) * var(--hr)); }
+.g-axis span { position: absolute; right: 0; top: calc((var(--at) - var(--h0)) * var(--hr)); transform: translateY(-50%); color: var(--ink-soft); font-size: 0.78rem; font-weight: 600; white-space: nowrap; }
+.g-head { margin: 0; height: 44px; font: 600 1rem/1 var(--sans); }
+.g-head a { text-decoration: none; }
+.g-head a:hover { color: var(--accent); }
+.g-col { position: relative; height: calc(var(--rows) * var(--hr)); border-radius: 18px; background: repeating-linear-gradient(to bottom, transparent 0 calc(var(--hr) - 1px), var(--line) calc(var(--hr) - 1px) var(--hr)), var(--surface); box-shadow: inset 0 0 0 1px var(--line); }
+.g-ev { position: absolute; top: calc((var(--s) - var(--h0)) * var(--hr) + 3px); height: calc((var(--e) - var(--s)) * var(--hr) - 6px); left: calc(5px + (100% - 10px) * var(--lane) / var(--lanes)); width: calc((100% - 10px) / var(--lanes) - (var(--lanes) - 1) * 3px); display: flex; flex-direction: column; gap: 3px; padding: 9px 11px; overflow: hidden; border-radius: 12px; color: var(--ink); text-decoration: none; background: color-mix(in srgb, var(--tint) 20%, var(--page)); box-shadow: inset 3px 0 0 var(--tint); transition: background 0.2s; }
+.g-ev:hover { background: color-mix(in srgb, var(--tint) 32%, var(--page)); }
+.g-ev b { font: 400 1.08rem/1.1 var(--display); letter-spacing: -0.01em; }
+.g-ev span { color: var(--ink-soft); font-size: 0.78rem; font-weight: 600; }
+.g-ev > * { flex: none; }
+/* an hour or less: name and time on one line */
+.g-ev.short { flex-direction: row; align-items: center; gap: 10px; padding: 0 10px; }
+.g-ev.short b { flex: 0 1 auto; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.g-ev.short span { white-space: nowrap; }
+.g-ev.on { box-shadow: inset 3px 0 0 var(--tint), 0 0 0 2px var(--accent); }
+.g-ev.past { opacity: 0.5; }
+.g-now { position: absolute; z-index: 2; left: 0; right: 0; top: calc((var(--t) - var(--h0)) * var(--hr)); height: 2px; background: var(--accent); pointer-events: none; }
+.g-now::before { content: ""; position: absolute; left: -5px; top: -4px; width: 10px; height: 10px; border-radius: 50%; background: var(--accent); }
+
+/* day by day */
+.sched-day { padding: 72px 0 8px; scroll-margin-top: 64px; }
+.sched-day .lede { margin-bottom: 18px; }
+.slots { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
+.slot { position: relative; display: grid; grid-template-columns: 132px minmax(0, 1fr) auto; align-items: center; gap: 10px 28px; padding: 24px 0 24px 20px; border-bottom: 1px solid var(--line); }
+.slot::before { content: ""; position: absolute; left: 0; top: 24px; bottom: 24px; width: 3px; border-radius: 3px; background: var(--tint); }
+.s-time b { display: block; font: 400 1.7rem/1 var(--display); letter-spacing: -0.01em; }
+.s-time span { display: block; margin-top: 5px; color: var(--ink-soft); font-weight: 600; font-size: 0.92rem; }
+.s-live { display: inline-block; margin: 0 0 8px; padding: 4px 10px; border-radius: 999px; background: var(--accent); color: var(--btn-ink); font-size: 0.78rem; font-weight: 700; letter-spacing: 0.02em; }
+.s-name { display: block; font: 400 clamp(1.45rem, 2.6vw, 1.95rem)/1.1 var(--display); letter-spacing: -0.015em; text-decoration: none; }
+.s-name::after { content: ""; position: absolute; inset: 0; }
+.slot:hover .s-name { text-decoration: underline; text-underline-offset: 5px; text-decoration-thickness: 1.5px; }
+.s-meta { margin: 8px 0 0; display: flex; flex-wrap: wrap; gap: 4px 20px; color: var(--ink-soft); font-weight: 600; font-size: 0.93rem; }
+.s-status { color: var(--accent); }
+.s-btn { position: relative; z-index: 1; min-height: 44px; padding: 0 20px; font-size: 0.95rem; }
+.slot.on { background: linear-gradient(90deg, color-mix(in srgb, var(--accent) 10%, transparent), transparent 70%); }
+.slot.past { opacity: 0.55; }
+.sched-day .more li { flex-wrap: wrap; }
+.sched-end { padding-top: 88px; }
+
+@media (max-width: 860px) { .daynav .tz { display: none; } }
+@media (max-width: 640px) {
+  .glance { --hr: 44px; grid-template-columns: 38px repeat(var(--days), minmax(0, 1fr)); gap: 0 6px; }
+  .g-axis span { font-size: 0.68rem; }
+  .g-head { font-size: 0.92rem; }
+  .g-ev { left: calc(3px + (100% - 6px) * var(--lane) / var(--lanes)); width: calc((100% - 6px) / var(--lanes) - (var(--lanes) - 1) * 3px); padding: 7px; border-radius: 10px; }
+  .g-ev b { font-size: 0.92rem; }
+  .g-ev span { font-size: 0.68rem; }
+  .g-ev.short { padding: 5px 7px; }
+  .g-ev.short span { display: none; }
+  .slot { grid-template-columns: minmax(0, 1fr); gap: 6px; padding: 20px 0 20px 18px; }
+  .slot::before { top: 20px; bottom: 20px; }
+  .s-time { display: flex; align-items: baseline; gap: 6px; }
+  .s-time b { font: 600 1rem/1.3 var(--sans); }
+  .s-time span { margin: 0; font-size: 1rem; }
+  .s-btn { justify-self: start; margin-top: 8px; }
+}
+/* phones: the bar keeps Events and Schedule. The map is a scroll away and Afkar is linked in the footer */
+@media (max-width: 560px) { .bar-nav a[href$="#where"], .bar-nav .sister { display: none; } }
