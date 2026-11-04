@@ -10,7 +10,7 @@ import pathlib
 import re
 
 ROOT = pathlib.Path(__file__).parent
-THEME_COLOR = "#170f33"
+THEME_COLOR = "#282829"
 
 src = (ROOT / "assets" / "events.js").read_text(encoding="utf-8")
 data = json.loads(re.search(r"window\.INARA\s*=\s*(\{.*\});", src, re.S).group(1))
@@ -28,7 +28,7 @@ TEMPLATE = """<!doctype html>
 <meta name="theme-color" content="{color}">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap">
 <link rel="stylesheet" href="../assets/styles.css">
 </head>
 <body data-page="{page}" data-event="{slug}">

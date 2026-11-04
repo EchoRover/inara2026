@@ -12,9 +12,10 @@
   const TAU = Math.PI * 2;
   const rgba = (c, a) => `rgba(${c[0]},${c[1]},${c[2]},${a})`;
 
-  // The one palette (also in styles.css): dusk indigo, lantern amber, lilac for the lattice, cream for lit edges.
-  const AMBER = [255, 179, 71], EMBER = [255, 122, 89], LILAC = [183, 156, 255], CREAM = [255, 238, 205];
-  const NIGHT = ["#120a2b", "#24154d"];
+  // The IIT Delhi Abu Dhabi palette (also in styles.css). Light is Solar with Radiant embers, the lattice is a
+  // pale Carbon tint, lit edges are the lightest Solar tint, and the night behind it all is Carbon.
+  const SOLAR = [246, 146, 57], RADIANT = [245, 75, 76], MIST = [218, 216, 216], GLOW = [252, 237, 219];
+  const NIGHT = ["#222223", "#282829"];
 
   // ---------- geometry ----------
   function grid(w, h, s, ox = 0, oy = 0) {
@@ -51,14 +52,14 @@
   function latticeBase(st, s, dim) {
     const { w, h } = st, cells = grid(w, h, s), R = s / 2, r = R * 0.62;
     const [lit, lx] = layer(w, h);
-    lx.fillStyle = rgba(AMBER, 0.5); lx.beginPath(); cells.forEach((p) => star(lx, p.x, p.y, R, r)); lx.fill();
-    lx.fillStyle = rgba(AMBER, 0.85); lx.beginPath(); cells.forEach((p) => diamond(lx, p.x + s / 2, p.y, r * 0.42)); lx.fill();
-    lx.lineJoin = "round"; lx.strokeStyle = rgba(CREAM, 1); lx.lineWidth = 1.4; lx.beginPath();
+    lx.fillStyle = rgba(SOLAR, 0.5); lx.beginPath(); cells.forEach((p) => star(lx, p.x, p.y, R, r)); lx.fill();
+    lx.fillStyle = rgba(SOLAR, 0.85); lx.beginPath(); cells.forEach((p) => diamond(lx, p.x + s / 2, p.y, r * 0.42)); lx.fill();
+    lx.lineJoin = "round"; lx.strokeStyle = rgba(GLOW, 1); lx.lineWidth = 1.4; lx.beginPath();
     cells.forEach((p) => star(lx, p.x, p.y, R, r)); cells.forEach((p) => diamond(lx, p.x + s / 2, p.y, r * 0.42)); lx.stroke();
     const [base, bx] = layer(w, h);
     sky(bx, w, h, [[0, NIGHT[0]], [1, NIGHT[1]]]);
-    bx.fillStyle = rgba(LILAC, 0.05 * dim); bx.beginPath(); cells.forEach((p) => star(bx, p.x, p.y, R, r)); bx.fill();
-    bx.lineJoin = "round"; bx.strokeStyle = rgba(LILAC, 0.34 * dim); bx.lineWidth = 1.15; bx.beginPath();
+    bx.fillStyle = rgba(MIST, 0.05 * dim); bx.beginPath(); cells.forEach((p) => star(bx, p.x, p.y, R, r)); bx.fill();
+    bx.lineJoin = "round"; bx.strokeStyle = rgba(MIST, 0.34 * dim); bx.lineWidth = 1.15; bx.beginPath();
     cells.forEach((p) => star(bx, p.x, p.y, R, r)); cells.forEach((p) => diamond(bx, p.x + s / 2, p.y, r * 0.42)); bx.stroke();
     Object.assign(st, { s, cells, R, r, lit, base, box: null });
     st.ctx.drawImage(base, 0, 0, w, h);
@@ -85,7 +86,7 @@
       ctx.globalCompositeOperation = "lighter";
       ctx.drawImage(st.glow, box[0], box[1], G * 2, G * 2);
       ctx.drawImage(st.glow, box[0], box[1], G * 2, G * 2);
-      const a = ctx.createRadialGradient(x, y, 0, x, y, G); a.addColorStop(0, rgba(EMBER, 0.2)); a.addColorStop(1, rgba(EMBER, 0));
+      const a = ctx.createRadialGradient(x, y, 0, x, y, G); a.addColorStop(0, rgba(RADIANT, 0.2)); a.addColorStop(1, rgba(RADIANT, 0));
       ctx.fillStyle = a; ctx.fillRect(box[0], box[1], G * 2, G * 2);
       ctx.globalCompositeOperation = "source-over";
       st.box = box;
@@ -122,8 +123,8 @@
       for (const [i, a] of on) {
         const p = cells[i];
         ctx.beginPath(); star(ctx, p.x, p.y, R, r);
-        ctx.fillStyle = rgba(AMBER, a * 0.85); ctx.fill();
-        ctx.strokeStyle = rgba(CREAM, Math.min(1, a * 1.3)); ctx.lineWidth = 1.6; ctx.stroke();
+        ctx.fillStyle = rgba(SOLAR, a * 0.85); ctx.fill();
+        ctx.strokeStyle = rgba(GLOW, Math.min(1, a * 1.3)); ctx.lineWidth = 1.6; ctx.stroke();
       }
       st.on = on.map((o) => o[0]);
       if (reduced) return "still";
@@ -141,13 +142,13 @@
       x.quadraticCurveTo(r, top + H * 0.14, r, spring);
       x.lineTo(r, floor); x.closePath();
     }
-    x.fillStyle = "#0b0620"; x.fill("evenodd");
+    x.fillStyle = "#1a1a1b"; x.fill("evenodd");
   }
   // soft lilac lattice high in the sky, so the screen motif is always present
   function faintLattice(x, w, h, s) {
     const cells = grid(w, h, s), R = s / 2, r = R * 0.62;
     x.save(); x.beginPath(); x.rect(0, 0, w, h * 0.7); x.clip();
-    const g = x.createLinearGradient(0, 0, 0, h * 0.7); g.addColorStop(0, rgba(LILAC, 0.2)); g.addColorStop(1, rgba(LILAC, 0));
+    const g = x.createLinearGradient(0, 0, 0, h * 0.7); g.addColorStop(0, rgba(MIST, 0.2)); g.addColorStop(1, rgba(MIST, 0));
     x.strokeStyle = g; x.lineWidth = 1.1; x.lineJoin = "round"; x.beginPath();
     cells.forEach((p) => star(x, p.x, p.y, R, r)); x.stroke(); x.restore();
   }
@@ -160,17 +161,17 @@
     const d = document.createElement("div");
     d.setAttribute("aria-hidden", "true"); d.style.cssText = "position:absolute;width:0;height:0;overflow:hidden";
     d.innerHTML = `<svg width="0" height="0" xmlns="http://www.w3.org/2000/svg"><defs>
-      <radialGradient id="lt-glow"><stop offset="0" stop-color="#ffb347" stop-opacity="0.55"/><stop offset="0.5" stop-color="#ff7a59" stop-opacity="0.16"/><stop offset="1" stop-color="#ff7a59" stop-opacity="0"/></radialGradient>
-      <linearGradient id="lt-body" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe3a8"/><stop offset="1" stop-color="#ff9a4a"/></linearGradient>
+      <radialGradient id="lt-glow"><stop offset="0" stop-color="#f69239" stop-opacity="0.55"/><stop offset="0.5" stop-color="#f54b4c" stop-opacity="0.16"/><stop offset="1" stop-color="#f54b4c" stop-opacity="0"/></radialGradient>
+      <linearGradient id="lt-body" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fceddb"/><stop offset="1" stop-color="#f9a75e"/></linearGradient>
       <symbol id="lt" viewBox="0 0 60 100" overflow="visible">
         <circle cx="30" cy="52" r="48" fill="url(#lt-glow)"/>
-        <path d="M24 25 Q30 8 36 25" fill="none" stroke="#3a2370" stroke-width="2"/>
-        <path d="M16 30 L44 30 L40 24 L20 24 Z" fill="#3a2370"/>
+        <path d="M24 25 Q30 8 36 25" fill="none" stroke="#a61e22" stroke-width="2"/>
+        <path d="M16 30 L44 30 L40 24 L20 24 Z" fill="#a61e22"/>
         <path d="M18 30 Q13 52 20 73 L40 73 Q47 52 42 30 Z" fill="url(#lt-body)"/>
-        <path d="M30 30 L30 73 M24 30 Q21 52 25 73 M36 30 Q39 52 35 73" fill="none" stroke="#c25a1c" stroke-opacity="0.35" stroke-width="1"/>
-        <polygon points="${pts.join(" ")}" fill="#fff6dc"/>
-        <path d="M20 73 L40 73 L36 79 L24 79 Z" fill="#3a2370"/>
-        <path d="M30 79 L30 88" stroke="#3a2370" stroke-width="2"/>
+        <path d="M30 30 L30 73 M24 30 Q21 52 25 73 M36 30 Q39 52 35 73" fill="none" stroke="#bd634f" stroke-opacity="0.35" stroke-width="1"/>
+        <polygon points="${pts.join(" ")}" fill="#fffaf7"/>
+        <path d="M20 73 L40 73 L36 79 L24 79 Z" fill="#a61e22"/>
+        <path d="M30 79 L30 88" stroke="#a61e22" stroke-width="2"/>
       </symbol></defs></svg>`;
     document.body.appendChild(d);
   }
@@ -196,7 +197,7 @@
   const lanternScene = {
     build(st) {
       const { w, h, ctx } = st;
-      sky(ctx, w, h, [[0, "#0f0826"], [0.55, "#2a1658"], [0.86, "#7a3563"], [1, "#d9683f"]]);
+      sky(ctx, w, h, [[0, "#222223"], [0.5, "#2c2c2d"], [0.84, "#5e1c1f"], [1, "#a61e22"]]);
       faintLattice(ctx, w, h, cellSize(w, h, 6, 70, 150));
       colonnade(ctx, w, h, clamp(h * 0.18, 90, 140), Math.max(4, Math.round(w / 150)));
     },
@@ -207,12 +208,12 @@
   const dawnScene = {
     build(st) {
       const { w, h, ctx } = st, H = clamp(h * 0.18, 90, 140), sx = w * 0.7, sy = h - H * 1.12;
-      sky(ctx, w, h, [[0, "#1a0f3d"], [0.5, "#4a2570"], [0.8, "#c0527a"], [1, "#ffb36b"]]);
+      sky(ctx, w, h, [[0, "#222223"], [0.48, "#32629f"], [0.8, "#f36e68"], [1, "#f9a75e"]]);
       faintLattice(ctx, w, h, cellSize(w, h, 6, 70, 150));
       const g = ctx.createRadialGradient(sx, sy, 0, sx, sy, Math.min(w, h) * 0.55);
-      g.addColorStop(0, rgba(CREAM, 0.95)); g.addColorStop(0.1, rgba(AMBER, 0.7)); g.addColorStop(0.45, rgba(EMBER, 0.22)); g.addColorStop(1, rgba(EMBER, 0));
+      g.addColorStop(0, rgba(GLOW, 0.95)); g.addColorStop(0.1, rgba(SOLAR, 0.7)); g.addColorStop(0.45, rgba(RADIANT, 0.22)); g.addColorStop(1, rgba(RADIANT, 0));
       ctx.fillStyle = g; ctx.fillRect(0, 0, w, h);
-      ctx.fillStyle = rgba(CREAM, 1); ctx.beginPath(); ctx.arc(sx, sy, Math.max(22, Math.min(w, h) * 0.05), 0, TAU); ctx.fill();
+      ctx.fillStyle = rgba(GLOW, 1); ctx.beginPath(); ctx.arc(sx, sy, Math.max(22, Math.min(w, h) * 0.05), 0, TAU); ctx.fill();
       colonnade(ctx, w, h, H, Math.max(3, Math.round(w / 210)));
     },
     frame: () => "still",

@@ -714,9 +714,9 @@
     const perDay = days
       .map((d) => ({ ...d, id: d.name.split(" ")[0].toLowerCase(), label: shortDay(d.name).replace(/\s+\w+$/, ""), list: events.filter((e) => e.day === d.name).sort((a, b) => startOf(a) - startOf(b)) }))
       .filter((d) => d.list.length);
-    const loose = events.filter((e) => !dayNames.includes(e.day));
-    const allFest = loose.filter((e) => /through the fest/i.test(String(e.hours)));
-    const later = loose.filter((e) => !allFest.includes(e));
+    // Stalls run all fest with no slot, so they stay off the schedule.
+    // Anything else without a day yet goes under "Still being scheduled".
+    const later = events.filter((e) => !dayNames.includes(e.day) && !/through the fest/i.test(String(e.hours)));
     const slotted = perDay.flatMap((d) => d.list.filter(timed));
     const openCount = events.filter((e) => e.open).length;
     // UAE time is GMT+4 all year, so each slot is one fixed moment wherever the visitor is
@@ -742,15 +742,13 @@
         <div class="stage-content">
           <p class="kicker">Inara 2026</p>
           <h1 class="big" id="sc-h">Schedule</h1>
-          <p class="tagline">Three days of quizzing, music, art, theatre and film.</p>
-          <p class="facts"><span>13 to 15 November 2026</span><span>${slotted.length} scheduled events</span>${allFest.length ? `<span>${allFest.length} stalls open all fest</span>` : ""}<span>All times UAE (GMT+4)</span></p>
+          <p class="facts"><span>13 to 15 November 2026</span><span>${slotted.length} events</span><span>All times UAE (GMT+4)</span></p>
         </div>
       </section>`;
 
     const navItems = [
       slotted.length && ["glance", "At a glance"],
       ...perDay.map((d) => [d.id, d.label]),
-      allFest.length && ["all-fest", "All fest"],
       later.length && ["later", "To be confirmed"],
     ].filter(Boolean);
     const nav = `
@@ -801,15 +799,7 @@
         </div>
       </section>`).join("");
 
-    const listOf = (list) => `<ul class="more">${list.map((e) => `<li><a href="${eventHref(e)}">${esc(e.name)}</a><span>${esc([hosts(e), known(e.venue) ? e.venue : "", list === later ? dur(e) : ""].filter(Boolean).join(", "))}</span></li>`).join("")}</ul>`;
-    const fest = allFest.length ? `
-      <section class="sched-day" id="all-fest" aria-labelledby="all-fest-h">
-        <div class="wrap">
-          <h2 class="h2" id="all-fest-h">All through the fest</h2>
-          <p class="lede">Stalls and workshops you can drop into on any day.${allFest.every(free) ? " Free, no registration needed." : ""}</p>
-          ${listOf(allFest)}
-        </div>
-      </section>` : "";
+    const listOf = (list) => `<ul class="more">${list.map((e) => `<li><a href="${eventHref(e)}">${esc(e.name)}</a><span>${esc([hosts(e), known(e.venue) ? e.venue : "", dur(e)].filter(Boolean).join(", "))}</span></li>`).join("")}</ul>`;
     const tbc = later.length ? `
       <section class="sched-day" id="later" aria-labelledby="later-h">
         <div class="wrap">
@@ -827,7 +817,7 @@
         </div>
       </section>` : `<div style="padding-bottom:96px"></div>`;
 
-    main.innerHTML = top + nav + glance + dayLists + fest + tbc + end;
+    main.innerHTML = top + nav + glance + dayLists + tbc + end;
 
     // Live during the fest: "On now" and "Up next" tags, earlier slots dimmed, and a line on the clock.
     function live() {
