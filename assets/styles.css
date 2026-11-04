@@ -670,3 +670,4 @@ body::after { background: var(--crimson); opacity: 0.06; -webkit-mask: var(--pat
   .g-num { font-size: 2.9rem; }
 }
 @media (prefers-reduced-motion: reduce) { .pg-card { transition: none; } }
+.awards.one { grid-template-columns: minmax(0, 1fr); max-width: 420px; }

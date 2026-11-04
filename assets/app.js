@@ -9,8 +9,8 @@
   // prizes are [1st, 2nd, 3rd] in AED; "awards" are named awards [name, AED or null] instead
   const awards = (e) => (Array.isArray(e.awards) ? e.awards : []);
   const places = (e) => (Array.isArray(e.prizes) ? e.prizes : []);
-  const hasPrizes = (e) => places(e).length > 0 || awards(e).length > 0;
-  const pool = (e) => aed([...places(e), ...awards(e).map((a) => a[1] || 0)].reduce((a, b) => a + b, 0));
+  const hasPrizes = (e) => places(e).length > 0 || awards(e).length > 0 || e.pool > 0;
+  const pool = (e) => aed(e.pool > 0 ? e.pool : [...places(e), ...awards(e).map((a) => a[1] || 0)].reduce((a, b) => a + b, 0));
   // team [1, 1] is a solo event: no team name, no team size, and the form talks to one person
   const solo = (e) => e.team?.[0] === 1 && e.team?.[1] === 1;
   const clubName = (id) => clubs[id] + (short[id] ? ` (${short[id]})` : "");
@@ -104,7 +104,9 @@
   // named awards: the top award as a wide gold arch, the rest as smaller arches beneath it
   const awardList = (e) => { const [top, ...rest] = awards(e); return `<h2 class="h3">Awards</h2>
     <ol class="awards" aria-label="Awards">${[top, ...rest].map(([name, amt], i) => `<li class="${i ? "aw" : "aw top"}"><span class="aw-name">${esc(name)}</span><span class="aw-amt">${amt ? aed(amt) : "Award"}</span></li>`).join("")}</ol>`; };
-  const podium = (e) => (awards(e).length ? awardList(e) : places(e).length ? `<h2 class="h3">Prizes</h2>
+  const poolArch = (e) => `<h2 class="h3">Prizes</h2>
+    <ol class="awards one" aria-label="Prizes"><li class="aw top"><span class="aw-name">Prize pool</span><span class="aw-amt">${pool(e)}</span></li></ol>`;
+  const podium = (e) => (awards(e).length ? awardList(e) : !places(e).length && e.pool > 0 ? poolArch(e) : places(e).length ? `<h2 class="h3">Prizes</h2>
     <ol class="podium" aria-label="Prizes">${[1, 0, 2].filter((i) => e.prizes[i] != null).map((i) => `<li class="p${i + 1}"><span class="amt">${aed(e.prizes[i])}</span><span class="block"><b>${i + 1}</b></span><span class="place">${PLACES[i]}</span></li>`).join("")}</ol>` : "");
 
   // One cell of the star lattice as an SVG, used as a mask so each tile tints it with its own light.
