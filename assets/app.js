@@ -14,13 +14,12 @@
   // Collabs credit every host club equally.
   const hosts = (e) => e.hosts.map(clubName).join(" × ");
   const teamLine = (e) => (solo(e) ? "Individual entry" : e.team[0] === e.team[1] ? `Teams of ${e.team[0]}` : e.team[0] === 1 ? `Solo or teams of up to ${e.team[1]}` : `Teams of ${e.team[0]} to ${e.team[1]}`);
-  // "hours" is a number (2 -> "2 hours") or text like "3 to 4 hours" / "All through the fest"
+  // "hours" is a number (2 -> "2 hours") or text like "3 to 4 hours"
   const dur = (e) => (typeof e.hours === "string" ? e.hours : `${e.hours} ${e.hours === 1 ? "hour" : "hours"}`);
-  // entry: "free" = a show, stall or workshop anyone can walk into, no registration
+  // entry: "free" = a show anyone can walk into, no registration
   const free = (e) => e.entry === "free";
-  // Competitions get the tiles and slides. Free shows and stalls go in "Also at Inara" below them.
+  // Competitions get the tiles and slides on the home page. Free shows are on the schedule.
   const comps = events.filter((e) => !free(e));
-  const extras = events.filter(free);
   const status = (e) => (e.open ? "Registration open" : free(e) ? "Free to attend" : "Registrations will open soon");
   const known = (v) => v && v !== "TBC";
   // "time" is [start, end] in 24-hour UAE time, like ["18:00", "20:00"]
@@ -32,7 +31,7 @@
   const dayLine = (e) => (known(e.day) ? e.day + (timed(e) ? `, ${timeRange(e)}` : "") : "Day to be confirmed");
   // "Saturday 14 November" -> "Sat 14 Nov"
   const shortDay = (d) => d.replace(/^(\w{3})\w*\s+(\d+)\s+(\w{3})\w*$/, "$1 $2 $3");
-  // a free show with a slot reads as its slot; a stall reads as how long it runs
+  // a free show with a slot reads as its slot, otherwise as how long it runs
   const whenLine = (e) => (timed(e) ? dayLine(e) : dur(e));
   const tag = (e) => (e.placeholder ? `<span class="t-ph">Placeholder</span>` : "");
   // Opened straight from disk, folders don't resolve to index.html, so spell it out.
@@ -54,7 +53,7 @@
     scenes = [...main.querySelectorAll("canvas[data-scene]")].map((c) => window.InaraScenes.mount(c, c.dataset.scene));
   }
   // "guidelines" is a full web address, or a file in the site like "rulebooks/error-404.pdf".
-  // Shows, stalls and workshops have no rules, so they get no button at all.
+  // Shows have no rules, so they get no button at all.
   function guidelinesBtn(e, cls = "btn ghost") {
     if (e.guidelines) {
       const href = /^https?:\/\//.test(e.guidelines) ? e.guidelines : root + e.guidelines;
@@ -71,6 +70,8 @@
     const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" fill="none" stroke="black" stroke-width="1.2"><polygon points="${pts.join(" ")}"/><path d="${dm(0)}${dm(64)}"/></svg>`;
     return "data:image/svg+xml," + encodeURIComponent(svg);
   })();
+  // The page backdrop draws the same lattice faintly behind the frosted panes (see "foggy panes" in styles.css).
+  document.documentElement.style.setProperty("--pat", `url("${PATTERN_TILE}")`);
 
   // ================= home =================
   function home() {
@@ -92,7 +93,7 @@
         <div class="wrap">
           <h2 class="h2">Events</h2>
           <p class="lede">${comps.length} competitions from ${hostIds.length} clubs, open to students of every UAE university. Pick one to read what it's about, then register on its page.${anyPlaceholder ? " The line-up below is a placeholder until the clubs confirm it." : ""}</p>
-          <ul class="tiles" style="--pat:url('${PATTERN_TILE}')">${comps.map((e) => `
+          <ul class="tiles">${comps.map((e) => `
             <li class="tile scene-${e.scene}"><a href="${eventHref(e)}">
               <span class="t-status">${status(e)}</span>${tag(e)}
               <span class="t-name">${esc(e.name)}</span>
@@ -104,14 +105,6 @@
       </section>
 
       ${slides()}
-
-      ${extras.length ? `<section class="section also" id="also">
-        <div class="wrap">
-          <h2 class="h2">Also at Inara</h2>
-          <p class="lede">Shows, stalls and workshops. Free to attend, no registration needed.</p>
-        </div>
-      </section>
-      ${slides(extras, "Also at Inara")}` : ""}
 
       <section class="section" id="how">
         <div class="wrap">
@@ -132,7 +125,6 @@
         <p class="map-hint" aria-hidden="true">Use ctrl + scroll, or pinch, to zoom the map</p>
         <div class="wrap where-card">
           <h2 class="h2" id="where-h">Where we are</h2>
-          <div class="map-go" role="group" aria-label="Show on the map"><button type="button" data-go="campus">Our campus</button><button type="button" data-go="dubai">Dubai</button><button type="button" data-go="sharjah">Sharjah</button><button type="button" data-go="alain">Al Ain</button><button type="button" data-go="uae">Whole UAE</button></div>
           <div class="actions">
             <a class="btn" href="https://www.google.com/maps/dir/?api=1&destination=24.395148,54.58733" target="_blank" rel="noopener">Get directions</a>
             <a class="btn ghost" href="https://maps.app.goo.gl/NpHGPbLYVEjPSU8c8" target="_blank" rel="noopener">Open in Google Maps</a>
@@ -172,7 +164,7 @@
         <div class="dots" role="tablist" aria-label="Choose an event">${list.map((e, i) => `<button type="button" role="tab" aria-label="${esc(e.name)}" data-i="${i}"><span>${esc(e.name)}</span></button>`).join("")}</div>
       </section>`;
   }
-  // Every slideshow on the page (competitions, and "Also at Inara") runs on its own.
+  // Every slideshow on the page runs on its own.
   function wireSlides() { main.querySelectorAll(".slides").forEach(wireDeck); }
   function wireDeck(root) {
     const track = root.querySelector(".track"), dots = [...root.querySelectorAll(".dots button")], n = dots.length;
@@ -726,9 +718,8 @@
     const perDay = days
       .map((d) => ({ ...d, id: d.name.split(" ")[0].toLowerCase(), label: shortDay(d.name).replace(/\s+\w+$/, ""), list: events.filter((e) => e.day === d.name).sort((a, b) => startOf(a) - startOf(b)) }))
       .filter((d) => d.list.length);
-    // Stalls run all fest with no slot, so they stay off the schedule.
-    // Anything else without a day yet goes under "Still being scheduled".
-    const later = events.filter((e) => !dayNames.includes(e.day) && !/through the fest/i.test(String(e.hours)));
+    // Anything without a day yet goes under "Still being scheduled".
+    const later = events.filter((e) => !dayNames.includes(e.day));
     const slotted = perDay.flatMap((d) => d.list.filter(timed));
     const openCount = events.filter((e) => e.open).length;
     // UAE time is GMT+4 all year, so each slot is one fixed moment wherever the visitor is

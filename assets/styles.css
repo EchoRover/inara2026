@@ -15,7 +15,7 @@
   color-scheme: light;
 }
 /* the Carbon stages and footer: the same token names with dark values, so everything inside follows */
-.stage, .slides, .where, .foot {
+.stage, .slides, .where, .foot, .bar {
   --page: var(--carbon); --pop: #373837; --ink: #ffffff; --ink-soft: #dad8d8; --line: rgba(218, 216, 216, 0.2);
   --surface: rgba(255, 255, 255, 0.06); --accent: #f36e68; --field: rgba(255, 255, 255, 0.07); --field-line: rgba(218, 216, 216, 0.4); --danger: #f7a3a1;
   color: var(--ink); color-scheme: dark;
@@ -42,10 +42,34 @@ main:focus { outline: none; }
 
 /* ---------- top bar ---------- */
 .bar { position: fixed; inset: 0 0 auto; z-index: 20; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px clamp(16px, 4vw, 40px); color: var(--hero-ink); transition: background 0.25s, box-shadow 0.25s; }
-.bar.solid { background: var(--page); color: var(--ink); box-shadow: 0 1px 0 var(--line); }
+/* The IIT Delhi Abu Dhabi logo always sits on a solid Carbon bar, never over the moving scenes (brand rule, as on Afkar). */
+.bar { background: var(--page); box-shadow: 0 1px 0 var(--line); }
+.brand-row { display: flex; align-items: center; gap: 14px; }
+.inst { display: block; line-height: 0; }
+.inst img { height: 60px; width: auto; }
 .brand { display: flex; flex-direction: column; text-decoration: none; line-height: 1; }
+.brand-row .brand { padding-left: 14px; border-left: 1px solid var(--line); }
 .brand-name { font: 800 1.3rem/1 var(--display); letter-spacing: -0.02em; }
-.brand-sub { font-size: 0.78rem; font-weight: 600; opacity: 0.8; margin-top: 4px; }
+@media (max-width: 640px) {
+  .inst img { height: 36px; }
+  .brand-row { gap: 10px; } .brand-row .brand { padding-left: 10px; }
+  .brand-name { font-size: 1.2rem; }
+  .bar { gap: 10px; }
+  .bar-nav { gap: 14px; font-size: 0.9rem; }
+}
+@media (max-width: 400px) {
+  .bar { padding-left: 14px; padding-right: 14px; }
+  .inst img { height: 30px; }
+  .brand-row { gap: 8px; } .brand-row .brand { padding-left: 8px; }
+  .brand-name { font-size: 1.05rem; }
+  .bar-nav { gap: 10px; font-size: 0.84rem; }
+}
+@media (max-width: 340px) {
+  .inst img { height: 26px; }
+  .brand-row { gap: 6px; } .brand-row .brand { padding-left: 6px; }
+  .brand-name { font-size: 0.98rem; }
+  .bar-nav { gap: 8px; font-size: 0.8rem; }
+}
 .bar-nav { display: flex; gap: clamp(14px, 3vw, 28px); font-weight: 600; font-size: 0.97rem; }
 .bar-nav a { text-decoration: none; }
 .bar-nav a:hover { text-decoration: underline; text-underline-offset: 5px; }
@@ -350,15 +374,13 @@ body[data-page="event"] .bar { position: absolute; }
 .where.live .map-ctl { opacity: 1; pointer-events: auto; }
 .map-ctl button { width: 44px; height: 44px; border-radius: 12px; border: 0; cursor: pointer; background: var(--pop, rgba(255,255,255,0.12)); color: var(--ink); font: 600 1.3rem/1 var(--sans); box-shadow: inset 0 0 0 1px var(--line); }
 .map-ctl button:hover { box-shadow: inset 0 0 0 1.5px var(--accent); }
+/* phones: the zoom buttons go in a row at the top, clear of the campus label in the middle */
+@media (max-width: 640px) { .map-ctl { top: 80px; transform: none; grid-auto-flow: column; } }
 .map-hint { position: absolute; z-index: 3; left: 50%; top: 24px; transform: translateX(-50%); margin: 0; padding: 8px 14px; border-radius: 999px; background: var(--page); box-shadow: inset 0 0 0 1px var(--line); font-size: 0.88rem; font-weight: 600; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
 .where.hint .map-hint { opacity: 1; }
 
 
 
-.map-go { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 18px; opacity: 0; pointer-events: none; transition: opacity 0.4s; }
-.where.live .map-go { opacity: 1; pointer-events: auto; }
-.map-go button { border: 0; cursor: pointer; padding: 9px 15px; border-radius: 999px; background: var(--page); color: var(--ink); font: 600 0.9rem/1 var(--sans); box-shadow: inset 0 0 0 1.5px var(--line); }
-.map-go button:hover { box-shadow: inset 0 0 0 1.5px var(--accent); }
 
 
 
@@ -421,9 +443,6 @@ body[data-page="event"] .bar { position: absolute; }
   .slides .dots button[aria-selected="true"]::after { height: 100%; opacity: 0.4; }
   .slides .band .stage-content { padding-bottom: 160px; }
 }
-
-/* Also at Inara: a short heading above the second slideshow */
-.also { padding-bottom: 24px; }
 
 /* Link to the sister fest. Nav links never wrap inside themselves; on small phones the
    sister link moves to the footer only, so the bar stays on one line. */
@@ -510,3 +529,46 @@ body[data-page="schedule"] .bar { position: absolute; }
 }
 /* phones: the bar keeps Events and Schedule. The map is a scroll away and Afkar is linked in the footer */
 @media (max-width: 560px) { .bar-nav a[href$="#where"], .bar-nav .sister { display: none; } }
+
+/* ---------- foggy panes ----------
+   The light pages sit on a still wash of Crimson and Carbon tints, with the star lattice drawn faintly
+   over it. Cards are frosted glass: the lattice blurs away behind them and the colour comes through as fog.
+   Only brand colours: Crimson #a61e22 and its tints #e7c8bb #d59b89, Carbon's tint #dad8d8, Clarity. */
+:root {
+  --glass: rgba(255, 255, 255, 0.42); --glass-bar: rgba(255, 255, 255, 0.72);
+  --glass-shade: inset 0 1px 0 rgba(255, 255, 255, 0.9), inset 0 0 0 1px rgba(255, 255, 255, 0.45), 0 0 0 1px rgba(40, 40, 41, 0.09), 0 18px 40px -26px rgba(40, 40, 41, 0.4);
+  --fog: blur(18px) saturate(1.4);
+}
+body::before, body::after { content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none; }
+body::before {
+  background:
+    radial-gradient(44vmax 36vmax at 94% 4%, rgba(213, 155, 137, 0.26), transparent 70%),
+    radial-gradient(40vmax 34vmax at 2% 60%, rgba(231, 200, 187, 0.5), transparent 70%),
+    radial-gradient(42vmax 30vmax at 72% 100%, rgba(166, 30, 34, 0.08), transparent 70%),
+    radial-gradient(30vmax 28vmax at 34% 8%, rgba(218, 216, 216, 0.5), transparent 70%);
+}
+body::after { background: var(--crimson); opacity: 0.06; -webkit-mask: var(--pat) 0 0 / 64px 64px repeat; mask: var(--pat) 0 0 / 64px 64px repeat; }
+
+.tile a, .steps li, .panel, .prizes div, .reg-card, .team-card, .ph-note, .member {
+  background-color: var(--glass); -webkit-backdrop-filter: var(--fog); backdrop-filter: var(--fog); box-shadow: var(--glass-shade);
+}
+.tile a::after { background: linear-gradient(0deg, rgba(255, 255, 255, 0.7) 30%, rgba(255, 255, 255, 0.05) 100%); }
+.tile a:hover { box-shadow: var(--glass-shade), inset 0 0 0 1.5px var(--accent); }
+.g-col {
+  background: repeating-linear-gradient(to bottom, transparent 0 calc(var(--hr) - 1px), var(--line) calc(var(--hr) - 1px) var(--hr)), var(--glass);
+  -webkit-backdrop-filter: var(--fog); backdrop-filter: var(--fog); box-shadow: var(--glass-shade);
+}
+.g-ev { background: color-mix(in srgb, var(--tint) 22%, rgba(255, 255, 255, 0.7)); }
+.g-ev:hover { background: color-mix(in srgb, var(--tint) 34%, rgba(255, 255, 255, 0.7)); }
+.member.ok { box-shadow: var(--glass-shade), inset 0 0 0 1.5px color-mix(in srgb, var(--accent) 60%, transparent); }
+/* form fields keep their grey fill, frosted so the lattice never runs behind what people type */
+.reg .input, .reg .field select, .seg { -webkit-backdrop-filter: var(--fog); backdrop-filter: var(--fog); }
+/* the sticky bars frost over the page as it scrolls under them */
+.tabs { background: var(--glass-bar); -webkit-backdrop-filter: var(--fog); backdrop-filter: var(--fog); }
+
+/* no blur available, or the visitor asked for less transparency: solid panes */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) { :root { --glass: rgba(255, 255, 255, 0.88); --glass-bar: rgba(255, 255, 255, 0.96); } }
+@media (prefers-reduced-transparency: reduce) {
+  :root { --glass: rgba(255, 255, 255, 0.94); --glass-bar: #ffffff; --fog: none; }
+  body::after { display: none; }
+}

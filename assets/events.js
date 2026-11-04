@@ -18,26 +18,25 @@
                  or "dawn" (a slow sunrise behind arches)
     hosts        list of club ids from "clubs" below. Two ids means a collaboration
     open         true when people can register now, false shows "Registrations will open soon" and no form
-    entry        "free" for shows, stalls and workshops anyone can walk into: no registration, the
-                 page shows "Free to attend" instead of "Opens soon"
+    entry        "free" for shows anyone can walk into: no registration, the page shows
+                 "Free to attend" instead of "Registrations will open soon"
     cap          optional: most teams that can take part. Teams after that go on the waitlist
     placeholder  true while the event is invented. Shows a "Placeholder" tag. Delete the line when real
     team         [smallest, largest] team size. [1, 1] makes it a SOLO event: no team name, no team size,
                  and the form reads "Register" and "Your details". [2, 4] means teams of 2 to 4
     hours        how long the event runs, as a number (1.5 means an hour and a half), or text
-                 like "3 to 4 hours" or "All through the fest"
+                 like "3 to 4 hours"
     day          which day it happens, written exactly as one of the "days" below, like "Saturday 14 November".
                  "TBC" until it is fixed
     time         optional: [start, end] in 24-hour UAE time, like ["18:00", "20:00"] for 6 to 8 PM.
-                 With a day and a time the event appears on the schedule page in its slot. Stalls that run
-                 all fest leave it out and keep "hours": "All through the fest"
+                 With a day and a time the event appears on the schedule page in its slot
     venue        where on campus. "TBC" until it is fixed
     prizes       list of prize amounts in AED for 1st, 2nd, 3rd, like [3000, 2000, 1500].
                  Leave it empty ([]) until the prizes are confirmed, and no prize section is shown
     tags         short topic words, used to suggest similar events on each page
     guidelines   the rules document: a full web address, or a PDF put in the rulebooks folder, written as
                  "rulebooks/error-404.pdf". Empty text shows "Guidelines will be released soon"
-                 (shows and stalls with "entry": "free" show no guidelines button at all)
+                 (shows with "entry": "free" show no guidelines button at all)
     line         one short sentence under the event name
     blurb        two or three sentences about the event, shown on the About tab
     prelim       what the online round is, if there is one. Empty text means there is no online round
@@ -55,7 +54,6 @@ window.INARA = {
       "quizzing": "Quizzing Club",
       "drama": "Drama Club",
       "dadc": "Digital Arts and Design Club",
-      "majlis": "The Majlis",
       "coding": "Coding Club"
   },
   "short": {"dadc": "DADC"},
@@ -71,12 +69,7 @@ window.INARA = {
     {"slug": "genesis", "name": "GENesis", "scene": "pulse", "hosts": ["quizzing"], "open": true, "team": [4, 4], "hours": "3 to 4 hours", "day": "Saturday 14 November", "time": ["10:00", "14:00"], "venue": "Al Maria Auditorium", "prizes": [], "tags": ["quiz", "general knowledge"], "guidelines": "", "line": "A General Knowledge Quiz.", "blurb": "GENesis is a general knowledge quiz that tests both what you know and how you think, spanning science and technology, history, geography, sport, business, current affairs, but also test your critical thinking and reasoning. Teams start with a fast-paced, timed round where quicker answers earn more points, then move on to a mix of formats including Connect, logic puzzles and Closest Wins. Bring your team, your sharpest minds and your best guesses!", "prelim": "", "final": "Six teams quiz it out on the Auditorium stage.", "bring": "Just your team."},
     {"slug": "error-404", "name": "Error 404! (Not Jeopardy!)", "scene": "screen", "hosts": ["quizzing", "coding"], "open": true, "team": [4, 4], "hours": "3 to 4 hours", "day": "Friday 13 November", "time": ["15:00", "18:00"], "venue": "Al Maria Auditorium", "prizes": [], "tags": ["quiz", "science", "coding"], "guidelines": "rulebooks/error-404.pdf", "line": "A Jeopardy-inspired buzzer quiz.", "blurb": "Error 404! is a Jeopardy-inspired buzzer quiz covering biology, chemistry, physics, history of science, inventions, and more. Teams race to buzz in first and on widely varying topics with a few hidden surprises in the formats.", "prelim": "", "final": "Six teams quiz it out on the Auditorium stage.", "bring": "Just your team."},
     {"slug": "riwayaat", "name": "Riwayaat (روايات)", "scene": "lanterns", "hosts": ["drama"], "open": false, "entry": "free", "hours": 1, "day": "Sunday 15 November", "time": ["18:00", "19:00"], "venue": "Al Dhowaher Auditorium", "tags": ["theatre", "performance"], "guidelines": "", "line": "Stories Beyond the Curtain.", "blurb": "The first theatrical production by IITD-AD's Drama Club, written and directed by members of the club."},
-    {"slug": "film-festival", "name": "Short Film Festival", "scene": "screen", "hosts": ["dadc"], "open": false, "entry": "free", "hours": 3, "day": "Sunday 15 November", "time": ["19:00", "22:00"], "venue": "Al Dhowaher Auditorium", "tags": ["film", "screening", "performance"], "guidelines": "", "line": "This year's theme is Gravity.", "blurb": "The second edition of DADC's Short Film Festival open to undergraduate students. The theme for this year is Gravity: Some things are drawn together. Some are held in place. Some drift for a long time before they finally fall. It isn't always something you can see, but it's always there, quietly shaping where things end up. Film submissions have closed. Come and watch the screening."},
-    {"slug": "music-stalls", "name": "Music Stalls", "scene": "pulse", "hosts": ["music"], "open": false, "entry": "free", "hours": "All through the fest", "day": "TBC", "venue": "Stalls outside", "tags": ["music", "stall"], "guidelines": "", "line": "Blind Listening, Finish the Lyrics and Karaoke Scorer.", "blurb": "Guess the song, finish the lyrics or chase a karaoke score at the Music Club stalls. Drop by any time during the fest."},
-    {"slug": "pipe-cleaner-workshop", "name": "Pipe Cleaner Workshop", "scene": "dawn", "hosts": ["fine-arts"], "open": false, "entry": "free", "hours": "All through the fest", "day": "TBC", "venue": "Stalls outside", "tags": ["art", "workshop", "stall"], "guidelines": "", "line": "Make something small with your hands.", "blurb": "Twist pipe cleaners into something of your own at the Fine Arts Club stall. Drop by any time during the fest."},
-    {"slug": "face-painting", "name": "Face Painting", "scene": "dawn", "hosts": ["fine-arts"], "open": false, "entry": "free", "hours": "All through the fest", "day": "TBC", "venue": "Stalls outside", "tags": ["art", "stall"], "guidelines": "", "line": "Get your face painted.", "blurb": "The Fine Arts Club paints faces at its stall. Drop by any time during the fest."},
-    {"slug": "tote-bag-workshop", "name": "Tote Bag Painting Workshop", "scene": "dawn", "hosts": ["majlis"], "open": false, "entry": "free", "hours": "4 hours a day, on two days", "day": "TBC", "venue": "Promenade", "tags": ["art", "workshop", "heritage"], "guidelines": "", "line": "Paint a tote bag of your own and take it home.", "blurb": "The Majlis runs a tote bag painting workshop on the Promenade on two days of the fest. Drop by, paint a bag and take it with you."},
-    {"slug": "wheel-of-fortune", "name": "Wheel of Fortune", "scene": "screen", "hosts": ["quizzing"], "open": false, "entry": "free", "hours": "All through the fest", "day": "TBC", "venue": "Stalls outside", "tags": ["quiz", "stall"], "guidelines": "", "line": "Spin the wheel, answer the question.", "blurb": "Spin the Quizzing Club's wheel and take on whatever it lands on. Drop by any time during the fest."}
+    {"slug": "film-festival", "name": "Short Film Festival", "scene": "screen", "hosts": ["dadc"], "open": false, "entry": "free", "hours": 3, "day": "Sunday 15 November", "time": ["19:00", "22:00"], "venue": "Al Dhowaher Auditorium", "tags": ["film", "screening", "performance"], "guidelines": "", "line": "This year's theme is Gravity.", "blurb": "The second edition of DADC's Short Film Festival open to undergraduate students. The theme for this year is Gravity: Some things are drawn together. Some are held in place. Some drift for a long time before they finally fall. It isn't always something you can see, but it's always there, quietly shaping where things end up. Film submissions have closed. Come and watch the screening."}
   ],
   "universities": [
     {"name": "IIT Delhi Abu Dhabi", "aka": ["iitd", "iitdad", "iit delhi", "iit abu dhabi", "iitd ad"]},

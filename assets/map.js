@@ -201,8 +201,6 @@
     section.querySelector("[data-zoom=in]").addEventListener("click", () => zoomAt(0.6));
     section.querySelector("[data-zoom=out]").addEventListener("click", () => zoomAt(1 / 0.6));
     section.querySelector("[data-zoom=home]").addEventListener("click", () => flyTo(STOPS[2]));
-    // jump buttons: glide the camera to another emirate's universities
-    const PLACES = { campus: STOPS[2], dubai: { lon: 55.29, lat: 25.13, span: 0.22 }, sharjah: { lon: 55.49, lat: 25.33, span: 0.18 }, alain: { lon: 55.69, lat: 24.21, span: 0.15 }, uae: { lon: 54.6, lat: 24.6, span: 3.4 } };
     let flight = 0;
     function flyTo(to) {
       if (!user) return;
@@ -217,7 +215,6 @@
         if (e < 1) requestAnimationFrame(step);
       })(start);
     }
-    section.querySelectorAll("[data-go]").forEach((b) => b.addEventListener("click", () => flyTo(PLACES[b.dataset.go])));
 
     new IntersectionObserver(([e]) => { if (e.isIntersecting && !played) { played = true; play(); } }, { threshold: 0.4 }).observe(section);
     let rt; addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(() => { size(); redraw(); }, 150); });

@@ -34,8 +34,8 @@ TEMPLATE = """<!doctype html>
 <body data-page="{page}" data-event="{slug}">
 <a class="skip" href="#main">Skip to content</a>
 <header class="bar" id="bar">
-  <a class="brand" href="../" data-home aria-label="Inara home"><span class="brand-name">Inara</span><span class="brand-sub">IIT Delhi Abu Dhabi</span></a>
-  <nav class="bar-nav" aria-label="Main"><a href="../#events" data-home>All events</a><a href="../schedule/" data-home>Schedule</a><a href="../#where" data-home>Where we are</a><a class="sister" href="https://afkar2026.vercel.app/">Afkar</a></nav>
+  <div class="brand-row"><a class="inst" href="https://www.iitdabudhabi.ac.ae" target="_blank" rel="noopener"><img src="../assets/iitdad-logo-white.png" alt="IIT Delhi – Abu Dhabi" width="215" height="60"></a><a class="brand" href="../" data-home aria-label="Inara home"><span class="brand-name">Inara</span></a></div>
+  <nav class="bar-nav" aria-label="Main"><a href="../#events" data-home>Events</a><a href="../schedule/" data-home>Schedule</a><a href="../#where" data-home>Where we are</a><a class="sister" href="https://afkar2026.vercel.app/">Afkar</a></nav>
 </header>
 <main id="main" tabindex="-1"></main>
 <footer class="foot">
@@ -69,4 +69,4 @@ for e in data["events"]:
     write(e["slug"], "event", e["name"], desc)
 
 write("schedule", "schedule", "Schedule",
-      "The full Inara 2026 schedule, day by day: every quiz, show, competition and stall. IIT Delhi Abu Dhabi, 13 to 15 November 2026.")
+      "The full Inara 2026 schedule, day by day: every quiz, show and competition. IIT Delhi Abu Dhabi, 13 to 15 November 2026.")
