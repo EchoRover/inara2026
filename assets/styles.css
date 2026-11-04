@@ -11,7 +11,7 @@
   --surface: rgba(40, 40, 41, 0.04); --accent: var(--crimson); --btn: var(--crimson); --btn-ink: #ffffff;
   --field: rgba(40, 40, 41, 0.05); --field-line: rgba(40, 40, 41, 0.3); --danger: var(--crimson);
   --hero-ink: #ffffff; --hero-shadow: 0 2px 30px rgba(20, 20, 20, 0.75);
-  --display: "Montserrat", system-ui, sans-serif; --sans: "Montserrat", system-ui, sans-serif; --ar: "Amiri", "Noto Naskh Arabic", serif;
+  --display: "Montserrat", system-ui, sans-serif; --sans: "Montserrat", system-ui, sans-serif;
   color-scheme: light;
 }
 /* the Carbon stages and footer: the same token names with dark values, so everything inside follows */
@@ -49,25 +49,25 @@ main:focus { outline: none; }
 .inst img { height: 60px; width: auto; }
 .brand { display: flex; flex-direction: column; text-decoration: none; line-height: 1; }
 .brand-row .brand { padding-left: 14px; border-left: 1px solid var(--line); }
-.brand-name { font: 800 1.3rem/1 var(--display); letter-spacing: -0.02em; }
+.brand img { display: block; height: 56px; width: auto; }
 @media (max-width: 640px) {
   .inst img { height: 36px; }
   .brand-row { gap: 10px; } .brand-row .brand { padding-left: 10px; }
-  .brand-name { font-size: 1.2rem; }
+  .brand img { height: 36px; }
   .bar { gap: 10px; }
   .bar-nav { gap: 14px; font-size: 0.9rem; }
 }
 @media (max-width: 400px) {
   .bar { padding-left: 14px; padding-right: 14px; }
-  .inst img { height: 30px; }
+  .inst img { height: 28px; }
   .brand-row { gap: 8px; } .brand-row .brand { padding-left: 8px; }
-  .brand-name { font-size: 1.05rem; }
+  .brand img { height: 28px; }
   .bar-nav { gap: 10px; font-size: 0.84rem; }
 }
 @media (max-width: 340px) {
-  .inst img { height: 26px; }
+  .inst img { height: 23px; }
   .brand-row { gap: 6px; } .brand-row .brand { padding-left: 6px; }
-  .brand-name { font-size: 0.98rem; }
+  .brand img { height: 23px; }
   .bar-nav { gap: 8px; font-size: 0.8rem; }
 }
 .bar-nav { display: flex; gap: clamp(14px, 3vw, 28px); font-weight: 600; font-size: 0.97rem; }
@@ -85,8 +85,6 @@ main:focus { outline: none; }
 .hero { min-height: 100svh; display: grid; place-items: center; text-align: center; }
 .hero::after { background: radial-gradient(ellipse 46% 40% at 50% 50%, color-mix(in srgb, var(--page) 70%, transparent), transparent 100%); }
 .hero .stage-content { padding: 96px 16px 64px; text-shadow: var(--hero-shadow); }
-.hero-ar { display: block; font: 600 clamp(2rem, 5vw, 3.4rem)/1.1 var(--ar); }
-.hero-name { display: block; margin: 0; font: 800 clamp(3rem, 11vw, 8rem)/0.95 var(--display); letter-spacing: -0.04em; }
 .hero-inst { display: block; margin-top: 18px; font-weight: 600; font-size: clamp(1.1rem, 2.3vw, 1.65rem); letter-spacing: 0.02em; }
 .hero-meta { display: block; margin-top: 6px; font-size: clamp(0.98rem, 1.6vw, 1.15rem); opacity: 0.9; }
 .hero-actions { margin-top: 30px; display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; text-shadow: none; }
@@ -341,7 +339,7 @@ body[data-page="event"] .bar { position: absolute; }
 @media (max-width: 560px) { .reg .row2 { grid-template-columns: 1fr; } .seg span { padding: 0 14px; } }
 
 /* competition tiles: each in its own event's colours and pattern */
-.tiles { list-style: none; margin: 8px 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
+.tiles { list-style: none; margin: 24px 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
 .tile a { position: relative; isolation: isolate; overflow: hidden; display: flex; flex-direction: column; gap: 4px; min-height: 200px; padding: 22px; border-radius: 24px; background: var(--page); color: var(--ink); text-decoration: none; box-shadow: inset 0 0 0 1px var(--line); transition: transform 0.25s ease, box-shadow 0.25s ease; }
 .tile a::before { content: ""; position: absolute; inset: -32px; z-index: -2; background: var(--tint, var(--accent)); opacity: 0.18; -webkit-mask: var(--pat) 0 0 / 64px 64px repeat; mask: var(--pat) 0 0 / 64px 64px repeat; transition: opacity 0.3s ease, transform 1.2s ease; }
 .tile a::after { content: ""; position: absolute; inset: 0; z-index: -1; background: linear-gradient(0deg, var(--page) 35%, color-mix(in srgb, var(--page) 40%, transparent) 100%); }
@@ -385,9 +383,6 @@ body[data-page="event"] .bar { position: absolute; }
 
 
 /* ---------- Inara additions ---------- */
-.hero-ar { color: var(--accent); font-weight: 700; font-size: clamp(3.2rem, 9vw, 6rem); line-height: 1.15; }
-.hero-name { font-size: clamp(3rem, 11vw, 8rem); line-height: 0.95; }
-.hero-name .yr { color: var(--accent); }
 body[data-page="event"] .bar { position: absolute; }
 
 /* lanterns: SVG that the browser moves on the GPU, never redrawn per frame */
@@ -572,3 +567,30 @@ body::after { background: var(--crimson); opacity: 0.06; -webkit-mask: var(--pat
   :root { --glass: rgba(255, 255, 255, 0.94); --glass-bar: #ffffff; --fog: none; }
   body::after { display: none; }
 }
+
+/* ---------- the Inara logo in the hero, twinkling ----------
+   The official logo, with its maroon lifted for Carbon the way the site lifts Crimson (towards #f36e68).
+   Sparkles bloom and fade over it, and now and then a glint of light runs across the letters. */
+.hero-logo { position: relative; width: min(620px, 84vw); margin: 0 auto; line-height: 0; }
+.hero-logo img { display: block; width: 100%; height: auto; filter: drop-shadow(0 6px 28px rgba(20, 20, 20, 0.6)); }
+.glint {
+  position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(105deg, transparent 42%, rgba(255, 246, 230, 0.6) 50%, transparent 58%) no-repeat;
+  background-size: 300% 100%; background-position: 150% 0;
+  -webkit-mask: url("inara-logo-1240.webp") 0 0 / 100% 100% no-repeat; mask: url("inara-logo-1240.webp") 0 0 / 100% 100% no-repeat;
+  animation: glint 7s ease-in-out 1.2s infinite;
+}
+@keyframes glint { 0% { background-position: 150% 0; } 26%, 100% { background-position: -50% 0; } }
+.twinkles i { position: absolute; left: var(--x); top: var(--y); width: var(--s); aspect-ratio: 1; transform: translate(-50%, -50%); filter: drop-shadow(0 0 6px rgba(255, 228, 180, 0.9)); }
+.twinkles i::before {
+  content: ""; position: absolute; inset: 0;
+  background: radial-gradient(circle, #ffffff 0 18%, #fceddb 30%, #f9c66b 70%);
+  clip-path: polygon(50% 0, 58% 42%, 100% 50%, 58% 58%, 50% 100%, 42% 58%, 0 50%, 42% 42%);
+  transform: scale(0); opacity: 0; animation: twinkle var(--d) ease-in-out var(--w) infinite;
+}
+@keyframes twinkle {
+  0%, 100% { transform: scale(0) rotate(0deg); opacity: 0; }
+  45% { transform: scale(1) rotate(45deg); opacity: 1; }
+  60% { transform: scale(0.75) rotate(60deg); opacity: 0.85; }
+}
+@media (prefers-reduced-motion: reduce) { .glint, .twinkles { display: none; } }

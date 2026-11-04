@@ -18,9 +18,8 @@
   const dur = (e) => (typeof e.hours === "string" ? e.hours : `${e.hours} ${e.hours === 1 ? "hour" : "hours"}`);
   // entry: "free" = a show anyone can walk into, no registration
   const free = (e) => e.entry === "free";
-  // Competitions get the tiles and slides on the home page. Free shows are on the schedule.
-  const comps = events.filter((e) => !free(e));
-  const status = (e) => (e.open ? "Registration open" : free(e) ? "Free to attend" : "Registrations will open soon");
+  // "status" in events.js overrides the line, like "Registrations closed" or "A play, free to attend"
+  const status = (e) => e.status || (e.open ? "Registration open" : free(e) ? "Free to attend" : "Registrations will open soon");
   const known = (v) => v && v !== "TBC";
   // "time" is [start, end] in 24-hour UAE time, like ["18:00", "20:00"]
   const timed = (e) => known(e.day) && Array.isArray(e.time) && e.time.length === 2;
@@ -73,16 +72,21 @@
   // The page backdrop draws the same lattice faintly behind the frosted panes (see "foggy panes" in styles.css).
   document.documentElement.style.setProperty("--pat", `url("${PATTERN_TILE}")`);
 
+  // Sparkles over the hero logo: where each one sits on the logo (% across, % down), its size
+  // (% of the logo's width), how long one twinkle takes (s) and when it starts (s).
+  const TWINKLES = [
+    [54.8, 2.4, 5.1, 3.2, 0], [39.1, 17.3, 3.9, 2.8, 1.1], [70.8, 17.6, 4.2, 3.6, 0.5], [77.2, 17.6, 4.8, 3, 1.9],
+    [3.2, 8.8, 4.5, 4, 2.6], [87.1, 26.4, 3.9, 3.4, 0.8], [98.8, 73.5, 4.5, 3.8, 1.5], [58.9, 51.9, 3.3, 2.6, 2.2],
+    [21, 28.8, 3.6, 4.2, 3.1], [50.8, 68.7, 3.6, 3.4, 0.3], [64.5, 76.7, 3.3, 3, 2.9], [35.5, 91.4, 3.9, 3.8, 1.3],
+  ].map(([x, y, s, d, w]) => `<i style="--x:${x}%;--y:${y}%;--s:${s}%;--d:${d}s;--w:${w}s"></i>`).join("");
+
   // ================= home =================
   function home() {
-    const hostIds = [...new Set(comps.flatMap((e) => e.hosts))];
-    const anyPlaceholder = events.some((e) => e.placeholder);
     main.innerHTML = `
       <section class="stage hero" id="top" aria-label="Inara 2026">
         <canvas data-scene="hero" aria-hidden="true"></canvas>
         <div class="stage-content">
-          <span class="hero-ar" lang="ar" dir="rtl">إنارة</span>
-          <h1 class="hero-name">Inara <span class="yr">2026</span></h1>
+          <h1 class="hero-logo"><img src="assets/inara-logo-1240.webp" alt="Inara 2026" width="620" height="313"><span class="glint" aria-hidden="true"></span><span class="twinkles" aria-hidden="true">${TWINKLES}</span></h1>
           <span class="hero-inst">The cultural fest of IIT Delhi Abu Dhabi</span>
           <span class="hero-meta">13 to 15 November 2026</span>
           <div class="hero-actions"><a class="btn" href="#events">See the events</a><a class="btn ghost" href="${link("schedule/")}">See the schedule</a></div>
@@ -92,8 +96,7 @@
       <section class="section" id="events">
         <div class="wrap">
           <h2 class="h2">Events</h2>
-          <p class="lede">${comps.length} competitions from ${hostIds.length} clubs, open to students of every UAE university. Pick one to read what it's about, then register on its page.${anyPlaceholder ? " The line-up below is a placeholder until the clubs confirm it." : ""}</p>
-          <ul class="tiles">${comps.map((e) => `
+          <ul class="tiles">${events.map((e) => `
             <li class="tile scene-${e.scene}"><a href="${eventHref(e)}">
               <span class="t-status">${status(e)}</span>${tag(e)}
               <span class="t-name">${esc(e.name)}</span>
@@ -154,7 +157,7 @@
   }
 
   // The events as full-screen slides you swipe through, like a deck.
-  function slides(list = comps, label = "Events") {
+  function slides(list = events, label = "Events") {
     return `
       <section class="slides" aria-roledescription="carousel" aria-label="${esc(label)}">
         <div class="track" tabindex="0">${list.map(band).join("")}</div>
