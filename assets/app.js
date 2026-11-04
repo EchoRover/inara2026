@@ -132,7 +132,7 @@
       <section class="stage hero" id="top" aria-label="Inara 2026">
         <canvas data-scene="hero" aria-hidden="true"></canvas>
         <div class="stage-content">
-          <h1 class="hero-logo"><img src="assets/inara-logo-hero.webp" alt="Inara 2026" width="620" height="315"><span class="twinkles" aria-hidden="true">${TWINKLES}</span></h1>
+          <h1 class="hero-logo"><img src="assets/inara-logo-hero.webp" alt="Inara 2026" width="620" height="313"><span class="twinkles" aria-hidden="true">${TWINKLES}</span></h1>
           <span class="hero-inst">The Cultural Fest of IIT Delhi – Abu Dhabi</span>
           <span class="hero-meta">13-15 November, 2026</span>
           <div class="hero-actions"><a class="btn" href="#events">See the events</a><a class="btn ghost" href="${link("schedule/")}">See the schedule</a></div>
