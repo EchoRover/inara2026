@@ -170,17 +170,20 @@
       </section>
 
       <section class="where" id="where" aria-labelledby="where-h">
-        <canvas aria-hidden="true"></canvas>
-        <small class="map-credit">Outline © geoBoundaries (CC BY 4.0). Roads © OpenStreetMap contributors</small>
-        <div class="map-ctl" aria-label="Map controls"><button type="button" data-zoom="in" aria-label="Zoom in">+</button><button type="button" data-zoom="out" aria-label="Zoom out">−</button><button type="button" data-zoom="home" aria-label="Back to campus">◎</button></div>
-        <p class="map-hint" aria-hidden="true">Use ctrl + scroll, or pinch, to zoom the map</p>
         <div class="wrap where-card">
           <h2 class="h2" id="where-h">Where we are</h2>
+          <p class="lede">Inara is held on the IIT Delhi – Abu Dhabi campus.</p>
           <div class="actions">
             <a class="btn" href="https://www.google.com/maps/dir/?api=1&destination=24.395148,54.58733" target="_blank" rel="noopener">Get directions</a>
             <a class="btn ghost" href="https://maps.app.goo.gl/NpHGPbLYVEjPSU8c8" target="_blank" rel="noopener">Open in Google Maps</a>
           </div>
         </div>
+        <div class="wrap"><div class="map-frame">
+        <canvas aria-hidden="true"></canvas>
+        <small class="map-credit">Outline © geoBoundaries (CC BY 4.0). Roads © OpenStreetMap contributors</small>
+        <div class="map-ctl" aria-label="Map controls"><button type="button" data-zoom="in" aria-label="Zoom in">+</button><button type="button" data-zoom="out" aria-label="Zoom out">−</button><button type="button" data-zoom="home" aria-label="Back to campus">◎</button></div>
+        <p class="map-hint" aria-hidden="true">Use ctrl + scroll, or pinch, to zoom the map</p>
+        </div></div>
       </section>`;
     if (window.InaraMap) window.InaraMap.mount(main.querySelector("#where"));
   }

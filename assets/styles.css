@@ -671,3 +671,17 @@ body::after { background: var(--crimson); opacity: 0.06; -webkit-mask: var(--pat
 }
 @media (prefers-reduced-motion: reduce) { .pg-card { transition: none; } }
 .awards.one { grid-template-columns: minmax(0, 1fr); max-width: 420px; }
+
+/* Where we are, as on Afkar: the heading, line and buttons first, then the map in a rounded frame
+   inside the page width (instead of a full-screen map with the text over it) */
+.where { min-height: 0; display: block; overflow: visible; padding: 72px 0 56px; }
+.where::after { content: none; }
+.where-card { padding: 0 clamp(16px, 4vw, 40px) 28px; pointer-events: auto; }
+.where .lede { opacity: 1; }
+.map-frame { position: relative; height: min(68svh, 640px); min-height: 380px; border-radius: 26px; overflow: hidden; box-shadow: inset 0 0 0 1px var(--line); isolation: isolate; }
+.map-frame canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.map-frame::after { content: ""; position: absolute; inset: 0; border-radius: inherit; box-shadow: inset 0 0 0 1px rgba(218, 216, 216, 0.18); pointer-events: none; }
+@media (max-width: 640px) { .where { padding: 56px 0 64px; } .map-frame { height: 62svh; min-height: 340px; border-radius: 20px; } }
+
+/* the footer a shade darker than the Carbon sections above it, as Afkar's is darker than its page */
+.foot { background: #1c1c1d; }
