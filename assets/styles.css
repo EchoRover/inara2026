@@ -513,6 +513,7 @@ body[data-page="schedule"] .bar { position: absolute; }
 .slot.past { opacity: 0.55; }
 .sched-day .more li { flex-wrap: wrap; }
 .sched-end { padding-top: 88px; }
+.sched-end .h2 { margin-bottom: 20px; }
 
 @media (max-width: 860px) { .daynav .tz { display: none; } }
 @media (max-width: 640px) {

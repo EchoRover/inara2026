@@ -820,7 +820,6 @@
       <section class="section sched-end">
         <div class="wrap">
           <h2 class="h2">Want to compete?</h2>
-          <p class="lede">Registration is open for ${openCount} ${openCount === 1 ? "competition" : "competitions"}. Pick one and sign up on its page.</p>
           <a class="btn" href="${link(`${root}#events`)}">See the events</a>
         </div>
       </section>` : `<div style="padding-bottom:96px"></div>`;
