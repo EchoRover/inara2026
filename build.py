@@ -41,7 +41,7 @@ TEMPLATE = """<!doctype html>
 <footer class="foot">
   <div class="foot-inner">
     <a class="foot-logo" href="https://www.iitdabudhabi.ac.ae" target="_blank" rel="noopener"><img src="../assets/iitdad-logo-white.png" alt="IIT Delhi – Abu Dhabi" width="287" height="80"></a>
-    <nav class="foot-links" aria-label="Footer"><a href="../#events" data-home>Events</a><a href="../schedule/" data-home>Schedule</a><a href="../#where" data-home>Where we are</a><a href="https://afkar2026.vercel.app/">Afkar 2026</a><a href="https://www.iitdabudhabi.ac.ae" target="_blank" rel="noopener">iitdabudhabi.ac.ae</a></nav>
+    <nav class="foot-links" aria-label="Footer"><a href="../#events" data-home>Events</a><a href="../schedule/" data-home>Schedule</a><a href="../#where" data-home>Where we are</a><a href="https://afkar2026.vercel.app/">Afkar 2026</a></nav>
     <div class="foot-rule" aria-hidden="true"></div>
     <p class="copy">&copy; 2026 Indian Institute of Technology Delhi – Abu Dhabi</p>
     <div class="foot-meta">

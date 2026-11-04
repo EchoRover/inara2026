@@ -250,7 +250,7 @@ main:focus { outline: none; }
   .foot .foot-meta { grid-column: 1; grid-row: 5; justify-self: start; text-align: left; padding-top: 4px; }
   .foot .foot-meta .made { font-size: 0.8rem; }
 }
-@media (max-width: 560px) { .foot-logo img { height: 64px; } .foot .foot-logo img { margin-left: calc(-64px * 41 / 424); } }
+/* the logo stays 80px tall on phones too, as on Afkar */
 
 @media (max-width: 860px) {
   .stage::after { background: linear-gradient(0deg, color-mix(in srgb, var(--page) 92%, transparent) 0%, color-mix(in srgb, var(--page) 70%, transparent) 55%, color-mix(in srgb, var(--page) 35%, transparent) 100%); }
