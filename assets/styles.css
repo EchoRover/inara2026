@@ -496,7 +496,8 @@ body[data-page="schedule"] .bar { position: absolute; }
 
 /* day by day */
 .sched-day { padding: 72px 0 8px; scroll-margin-top: 64px; }
-.sched-day .lede { margin-bottom: 18px; }
+.sched-day .h2 { margin-bottom: 20px; }
+.glance-sec .h2 { margin-bottom: 20px; }
 .slots { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
 .slot { position: relative; display: grid; grid-template-columns: 132px minmax(0, 1fr) auto; align-items: center; gap: 10px 28px; padding: 24px 0 24px 20px; border-bottom: 1px solid var(--line); }
 .slot::before { content: ""; position: absolute; left: 0; top: 24px; bottom: 24px; width: 3px; border-radius: 3px; background: var(--tint); }

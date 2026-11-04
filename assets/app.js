@@ -89,7 +89,7 @@
         <canvas data-scene="hero" aria-hidden="true"></canvas>
         <div class="stage-content">
           <h1 class="hero-logo"><img src="assets/inara-logo-hero.webp" alt="Inara 2026" width="620" height="313"><span class="twinkles" aria-hidden="true">${TWINKLES}</span></h1>
-          <span class="hero-inst">The cultural fest of IIT Delhi - Abu Dhabi</span>
+          <span class="hero-inst">The Cultural Fest of IIT Delhi - Abu Dhabi</span>
           <span class="hero-meta">13-15 November, 2026</span>
           <div class="hero-actions"><a class="btn" href="#events">See the events</a><a class="btn ghost" href="${link("schedule/")}">See the schedule</a></div>
         </div>
@@ -769,7 +769,6 @@
       <section class="section glance-sec" id="glance" aria-labelledby="glance-h">
         <div class="wrap">
           <h2 class="h2" id="glance-h">At a glance</h2>
-          <p class="lede">The whole fest on one clock. Tap an event to open its page.</p>
           <div class="glance" style="--h0:${h0};--rows:${h1 - h0};--days:${perDay.length}">
             <div class="g-axis" aria-hidden="true">${Array.from({ length: h1 - h0 + 1 }, (_, k) => h0 + k).filter((h) => (h - h0) % 2 === 0).map((h) => `<span style="--at:${h}">${clock(h * 60)}</span>`).join("")}</div>
             ${perDay.map((d) => { const { lane, n } = lanes(d.list); return `
@@ -794,16 +793,10 @@
         </div>
         ${e.open ? `<a class="btn ghost s-btn" href="${eventHref(e, "#register")}">${solo(e) ? "Register" : "Register your team"}</a>` : ""}
       </li>`;
-    const dayLede = (d) => {
-      const t = d.list.filter(timed), n = d.list.length;
-      const from = t.length ? `, ${clockRange(Math.min(...t.map((e) => mins(e.time[0]))), Math.max(...t.map((e) => mins(e.time[1]))))}` : "";
-      return `${n} ${n === 1 ? "event" : "events"}${from}`;
-    };
     const dayLists = perDay.map((d) => `
       <section class="sched-day" id="${d.id}" aria-labelledby="${d.id}-h">
         <div class="wrap">
           <h2 class="h2" id="${d.id}-h">${esc(d.name)}</h2>
-          <p class="lede">${dayLede(d)}</p>
           <ol class="slots">${d.list.map((e) => row(d, e)).join("")}</ol>
         </div>
       </section>`).join("");
@@ -813,7 +806,6 @@
       <section class="sched-day" id="later" aria-labelledby="later-h">
         <div class="wrap">
           <h2 class="h2" id="later-h">Still being scheduled</h2>
-          <p class="lede">The day and time for ${later.length === 1 ? "this one is" : "these are"} on the way.</p>
           ${listOf(later)}
         </div>
       </section>` : "";
