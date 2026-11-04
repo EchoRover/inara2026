@@ -627,12 +627,14 @@ body::after { background: var(--crimson); opacity: 0.06; -webkit-mask: var(--pat
 .contact-ways { font-weight: 600; }
 .contact-ways a { color: var(--ink); }
 
-/* hero logo: the official logo in its own colours (maroon and gold), so the light comes to it instead.
-   A warm pool of light sits behind it, as if the logo were lit, and fades into the Carbon scene. */
-.hero-logo::before {
-  content: ""; position: absolute; z-index: -1; left: 50%; top: 50%; width: 150%; height: 190%; transform: translate(-50%, -50%);
-  background: radial-gradient(closest-side, rgba(255, 250, 242, 0.98) 0%, rgba(255, 246, 232, 0.94) 48%, rgba(253, 236, 210, 0.6) 66%, rgba(250, 224, 190, 0.22) 82%, rgba(250, 224, 190, 0) 100%);
-  pointer-events: none;
+/* hero: a light stage like the header bar, so the official logo sits on white in its own colours.
+   Clarity with the star lattice drawn faintly in Crimson; the lanterns still rise through it. */
+.hero {
+  --page: var(--clarity); --ink: var(--carbon); --ink-soft: #5f6060; --line: rgba(40, 40, 41, 0.14);
+  --hero-ink: var(--carbon); --hero-shadow: none; color: var(--carbon); color-scheme: light; isolation: isolate;
 }
-.hero-logo { isolation: isolate; }
+.hero canvas, .hero::after { display: none; }
+.hero::before { content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none; background: var(--crimson); opacity: 0.08; -webkit-mask: var(--pat) 50% 50% / 96px 96px repeat; mask: var(--pat) 50% 50% / 96px 96px repeat; }
+.hero .lanterns { z-index: 0; }
 .hero-logo img { filter: none; }
+.hero .btn.ghost { color: var(--carbon); }
