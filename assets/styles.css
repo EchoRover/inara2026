@@ -620,3 +620,9 @@ body::after { background: var(--crimson); opacity: 0.06; -webkit-mask: var(--pat
    not in the full screen height */
 .hero .stage-content { padding-top: calc(88px + 48px); padding-bottom: 48px; }
 @media (max-width: 640px) { .hero .stage-content { padding-top: calc(56px + 40px); padding-bottom: 40px; } }
+
+/* registration errors can carry the organizers' contact as links */
+.form-err a { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
+/* the optional "Questions" block on an event page (events.js "contact") */
+.contact-ways { font-weight: 600; }
+.contact-ways a { color: var(--ink); }

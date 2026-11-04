@@ -40,12 +40,9 @@
   const link = (path) => (local ? path.replace(/(^|\/)(#|$)/, "$1index.html$2") : path);
   const root = page === "home" ? "" : "../";
   const eventHref = (e, hash = "") => link(`${root}${e.slug}/${hash}`);
-  // Served over http(s), registrations go to /api on the same address (the shared backend).
-  // Opened straight from disk there is no backend, and the form only simulates a registration.
-  const API = window.INARA_API ?? (location.protocol.startsWith("http") ? "/api" : null);
-  // Preview mode: a dummy registration page. The form works on screen, but nothing is sent or saved.
-  // Registrations will go through the university's registration system (CRM); until then this stays true.
-  const PREVIEW = true;
+  // Registrations go to the PHP API in the site's own api/ folder (root is "" on the home page
+  // and "../" on event pages, so this works under any path). It sends each one to the university's CRM.
+  const API = window.INARA_API ?? `${root}api`;
   const smooth = () => (matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth");
 
   let scenes = [];
@@ -53,15 +50,51 @@
     scenes.forEach((s) => s.stop());
     scenes = [...main.querySelectorAll("canvas[data-scene]")].map((c) => window.InaraScenes.mount(c, c.dataset.scene));
   }
-  // "guidelines" is a full web address, or a file in the site like "rulebooks/error-404.pdf".
-  // Shows have no rules, so they get no button at all.
+  // What the form asks of members other than the lead, per field (events.js "memberFields"):
+  // "required" (default), "optional" (may be left blank, checked if filled) or "lead" (only the lead is asked).
+  // The lead always gives name, email and phone. "phones": "lead" is the short way to ask only the lead's phone.
+  const ask = (e, k) => e.memberFields?.[k] || (k === "phone" && e.phones === "lead" ? "lead" : "required");
+  // Guidelines: a PDF named after the event in the rulebooks/ folder (rulebooks/genesis.pdf) is found when
+  // the page loads, so adding a rulebook is just dropping the file in. "guidelines" in events.js (a file in
+  // the site or a full web address) still works and wins. Shows have no rules, so they get no button at all.
   const guidelinesHref = (e) => (/^https?:\/\//.test(e.guidelines) ? e.guidelines : root + e.guidelines);
   function guidelinesBtn(e, cls = "btn ghost") {
     if (e.guidelines) {
       return `<a class="${cls}" href="${esc(guidelinesHref(e))}" target="_blank" rel="noopener">Read the guidelines</a>`;
     }
-    return free(e) ? "" : `<span class="${cls}" aria-disabled="true">Guidelines will be released soon</span>`;
+    return free(e) ? "" : `<span class="${cls}" aria-disabled="true" data-guide-soon>Guidelines will be released soon</span>`;
   }
+  const guideWord = (e) => (e.guidelines ? `<a href="${esc(guidelinesHref(e))}" target="_blank" rel="noopener">guidelines</a>` : `<span data-guide-word>guidelines</span>`);
+  const guideLede = (e) => (e.guidelines ? ` or read the <a href="${esc(guidelinesHref(e))}" target="_blank" rel="noopener">guidelines</a>` : "");
+  function findGuidelines(e, scope) {
+    if (e.guidelines || free(e)) return;
+    const file = `rulebooks/${e.slug}.pdf`;
+    fetch(root + file, { method: "HEAD", cache: "no-cache" })
+      .then((r) => {
+        // some servers answer every address with a web page, so only a real PDF counts
+        if (!r.ok || !(r.headers.get("content-type") || "").includes("pdf")) return;
+        e.guidelines = file;
+        scope.querySelectorAll("[data-guide-soon]").forEach((el) => (el.outerHTML = guidelinesBtn(e, el.className)));
+        scope.querySelectorAll("[data-guide-word]").forEach((el) => (el.outerHTML = guideWord(e)));
+        scope.querySelectorAll("[data-guide-lede]").forEach((el) => (el.innerHTML = guideLede(e)));
+      })
+      .catch(() => {});
+  }
+  // "contact" in events.js: who people can reach about the event. Optional; without it there is no block.
+  function contactBlock(e) {
+    const c = e.contact;
+    if (!c || !c.name) return "";
+    const digits = (c.phone || "").replace(/[^0-9]/g, "");
+    const ways = [
+      c.email && `<a href="mailto:${esc(c.email)}">${esc(c.email)}</a>`,
+      digits && `<a href="https://wa.me/${digits}" target="_blank" rel="noopener">${esc(c.phone)}</a> (WhatsApp)`,
+    ].filter(Boolean);
+    return `<h2 class="h3">Questions</h2>
+      <p class="contact">For questions about ${esc(e.name)} or registration, contact ${esc(c.name)}${c.role ? `, ${esc(c.role)}` : ""}.</p>
+      ${ways.length ? `<p class="contact-ways">${ways.join("<br>")}</p>` : ""}`;
+  }
+  // The line added to a failed registration: who to contact if it keeps failing.
+  const contactLine = (e) => ` If it keeps failing, contact the organizers${e.contact?.email ? ` at <a href="mailto:${esc(e.contact.email)}">${esc(e.contact.email)}</a>` : ""}${e.contact?.phone ? ` or on WhatsApp at <a href="https://wa.me/${esc(e.contact.phone.replace(/[^0-9]/g, ""))}" target="_blank" rel="noopener">${esc(e.contact.phone)}</a>` : ""}.`;
 
   // One cell of the star lattice as an SVG, used as a mask so each tile tints it with its own light.
   const PATTERN_TILE = (() => {
@@ -250,7 +283,9 @@
             ${free(e) ? `<div><dt>Registration</dt><dd>${esc(e.note || status(e))}</dd></div>`
               : e.status ? `<div><dt>Registration</dt><dd>${esc(e.status + (e.note ? ", " + e.note.charAt(0).toLowerCase() + e.note.slice(1) : ""))}</dd></div>` : ""}
           </dl>
+          ${contactBlock(e) ? `<div class="copy" style="margin-top:32px">${contactBlock(e)}</div>` : ""}
         </div>${more}`;
+      findGuidelines(e, main);
       return;
     }
     const steps = [
@@ -278,6 +313,7 @@
               <p class="lead">${esc(e.blurb)}</p>
               <h2 class="h3">Timeline</h2>
               <ol class="timeline">${steps.map(([h, p]) => `<li><h4>${esc(h)}</h4><p>${esc(p)}</p></li>`).join("")}</ol>
+              ${contactBlock(e)}
               ${hasPrizes(e) ? `<h2 class="h3">Prizes</h2>
               <ol class="podium" aria-label="Prizes">${[1, 0, 2].filter((i) => e.prizes[i] != null).map((i) => `<li class="p${i + 1}"><span class="amt">${aed(e.prizes[i])}</span><span class="block"><b>${i + 1}</b></span><span class="place">${places[i]}</span></li>`).join("")}</ol>` : ""}
             </div>
@@ -297,6 +333,7 @@
         <section role="tabpanel" id="register" aria-labelledby="tab-register" tabindex="-1" class="wrap reg"></section>
       </div>${more}`;
     registration(e, main.querySelector("#register"));
+    findGuidelines(e, main);
 
     const tabs = main.querySelector(".tabs");
     function select(name, scroll, write = true) {
@@ -375,7 +412,7 @@
   function phoneE164(code, num) {
     const d = (num || "").replace(/\D/g, "").replace(/^0/, "");
     if (!/^\+[1-9]\d{0,3}$/.test(code || "")) return null;
-    const ok = code === "+971" ? /^5\d{8}$/.test(d) : code === "+91" || code === "+1" ? /^\d{10}$/.test(d) : /^\d{6,12}$/.test(d);
+    const ok = /^\d{6,12}$/.test(d);
     return ok && code.length - 1 + d.length <= 15 ? code + d : null;
   }
 
@@ -396,7 +433,7 @@
     const one = solo(e);
     let draft = null;
     try { draft = JSON.parse(localStorage.getItem(key)); } catch (_) {}
-    const state = draft || { team: "", uni: "", uniOther: false, count: lo, people: [], optin: false };
+    const state = draft || { team: "", uni: "", uniOther: false, count: lo, people: [], agree: false, optin: false };
     state.count = Math.max(lo, Math.min(hi, state.count || lo));
     // 8 to 64 characters of letters, digits, dot, dash and underscore: what the backend accepts
     const formId = crypto.randomUUID ? crypto.randomUUID() : (Date.now().toString(36) + Math.random().toString(36).slice(2, 12)).padEnd(12, "0");
@@ -417,7 +454,7 @@
       <div class="reg-grid">
         <form class="reg-form" id="reg-form" novalidate>
           <h2 class="h2" id="reg-h">${one ? "Register" : "Register your team"}</h2>
-          <p class="lede">For ${esc(e.name)}${one ? "" : `: ${esc(teamLine(e).toLowerCase())}`}${known(e.day) ? `, on ${esc(e.day)}` : ""}. <a href="#about" data-tab="about">About ${esc(e.name)}</a>${e.guidelines ? ` or read the <a href="${esc(guidelinesHref(e))}" target="_blank" rel="noopener">guidelines</a>` : ""}</p>
+          <p class="lede">For ${esc(e.name)}${one ? "" : `: ${esc(teamLine(e).toLowerCase())}`}${known(e.day) ? `, on ${esc(e.day)}` : ""}. <a href="#about" data-tab="about">About ${esc(e.name)}</a><span data-guide-lede>${guideLede(e)}</span></p>
           ${draft ? `<p class="notice">We kept what you typed last time. <button type="button" class="linkish" data-reset>Start over</button></p>` : ""}
 
           ${one ? `
@@ -439,6 +476,8 @@
           </section>`}
 
           <section class="reg-sec">
+            <div class="field" data-f="agree"><p class="err"></p>
+              <label class="checkline"><input type="checkbox" id="agree" ${state.agree ? "checked" : ""}><span>${one ? `I've read the ${guideWord(e)} and agree to follow them.` : `I've read the ${guideWord(e)}, and everyone on my team agrees to follow them.`}</span></label></div>
             <label class="checkline"><input type="checkbox" id="optin" ${state.optin ? "checked" : ""}><span>Email me about future IIT Delhi – Abu Dhabi events</span></label>
             <p class="fine">Photos and videos are taken at the fest and may be shared by IIT Delhi – Abu Dhabi. If ${one ? "you" : "someone on your team"} would rather not appear, tell us at the desk on the day.</p>
           </section>
@@ -462,7 +501,8 @@
 
     const form = host.querySelector("form"), members = host.querySelector("#members");
     const $ = (s) => host.querySelector(s);
-    const formErr = (msg) => { const p = $("#form-err"); p.textContent = msg; p.hidden = !msg; if (msg) p.scrollIntoView({ block: "center", behavior: smooth() }); };
+    // messages are built from escaped text, so the contact links can be real links
+    const formErr = (html) => { const p = $("#form-err"); p.innerHTML = html; p.hidden = !html; if (html) p.scrollIntoView({ block: "center", behavior: smooth() }); };
     const save = () => { try { localStorage.setItem(key, JSON.stringify(state)); } catch (_) {} };
     host.querySelector("[data-reset]")?.addEventListener("click", () => { try { localStorage.removeItem(key); } catch (_) {} registration(e, host); });
 
@@ -473,21 +513,22 @@
       state.people.forEach((p) => (p.code = p.code || "+971"));
       members.innerHTML = state.people.slice(0, state.count).map((p, i) => {
         const id = (f) => `m${i}-${f}`, lead = i === 0, ac = (t) => (lead ? t : "off");
+        const opt = (k) => (!lead && ask(e, k) === "optional" ? " (optional)" : "");
         return `
           <fieldset class="member" data-i="${i}">
             <legend class="sr">${one ? "Your details" : lead ? "Member 1, team lead" : `Member ${i + 1}`}</legend>
             <div class="member-head"><span class="av" aria-hidden="true">${initials(p.name) || i + 1}</span><h4>${one ? "You" : lead ? "Team lead" : `Member ${i + 1}`}</h4><span class="tick" aria-hidden="true"></span></div>
-            <div class="field" data-f="${id("name")}"><label for="${id("name")}">Full name, as on the certificate</label><p class="err"></p>
-              <input class="input" id="${id("name")}" data-k="name" maxlength="120" autocomplete="${ac("name")}" autocapitalize="words" spellcheck="false" value="${esc(p.name)}"></div>
+            ${!lead && ask(e, "name") === "lead" ? "" : `<div class="field" data-f="${id("name")}"><label for="${id("name")}">Full name, as on the certificate${opt("name")}</label><p class="err"></p>
+              <input class="input" id="${id("name")}" data-k="name" maxlength="120" autocomplete="${ac("name")}" autocapitalize="words" spellcheck="false" value="${esc(p.name)}"></div>`}
             <div class="row2">
-              <div class="field" data-f="${id("email")}"><label for="${id("email")}">Email</label><p class="err"></p>
+              ${!lead && ask(e, "email") === "lead" ? "" : `<div class="field" data-f="${id("email")}"><label for="${id("email")}">Email${opt("email")}</label><p class="err"></p>
                 <input class="input" id="${id("email")}" data-k="email" type="email" inputmode="email" maxlength="254" spellcheck="false" autocapitalize="off" autocomplete="${ac("email")}" placeholder="${!lead && leadDomain() ? "name@" + leadDomain() : ""}" value="${esc(p.email)}">
-                <p class="suggest" hidden></p></div>
-              <div class="field" data-f="${id("phone")}"><label for="${id("phone")}">WhatsApp</label><p class="err"></p>
+                <p class="suggest" hidden></p></div>`}
+              ${!lead && ask(e, "phone") === "lead" ? "" : `<div class="field" data-f="${id("phone")}"><label for="${id("phone")}">WhatsApp${opt("phone")}</label><p class="err"></p>
                 <div class="phone">
                   <span class="code"><input class="input" id="${id("code")}" data-k="code" list="codes" inputmode="tel" maxlength="5" autocomplete="${ac("tel-country-code")}" aria-label="${one ? "Country code" : `Member ${i + 1} country code`}" value="${esc(p.code)}"></span>
                   <input class="input" id="${id("phone")}" data-k="phone" type="text" inputmode="tel" maxlength="24" autocomplete="${ac("tel-national")}" placeholder="${p.code === "+971" ? "50 123 4567" : ""}" value="${esc(p.phone)}">
-                </div></div>
+                </div></div>`}
             </div>
           </fieldset>`;
       }).join("");
@@ -499,16 +540,15 @@
     const RULES = {
       team: () => (state.team.trim() ? "" : "Enter a team name"),
       uni: () => (state.uni.trim() ? "" : "Choose your university, or type its name"),
+      agree: () => (state.agree ? "" : one ? "Confirm you've read the guidelines" : "Confirm your team has read the guidelines"),
     };
     function memberError(i, k) {
       const p = state.people[i];
+      // members' fields that are optional or asked only of the lead may stay empty (members may share an email)
+      if (i > 0 && ask(e, k === "code" ? "phone" : k) !== "required" && !String(p[k === "code" ? "phone" : k] || "").trim()) return "";
       if (k === "name") return p.name.trim().length >= 2 ? "" : "Enter the full name";
-      if (k === "email") {
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(p.email.trim())) return "Enter an email address";
-        const dup = state.people.slice(0, state.count).findIndex((q, j) => j !== i && q.email.trim().toLowerCase() === p.email.trim().toLowerCase());
-        return dup >= 0 && dup < i ? "Each member needs their own email" : "";
-      }
-      if (k === "phone") return phoneE164(p.code, p.phone) ? "" : !/^\+[1-9]\d{0,3}$/.test(p.code || "") ? "Enter a country code, like +971" : p.code === "+971" ? "Enter a UAE mobile, like 50 123 4567" : "Enter the number after the country code";
+      if (k === "email") return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(p.email.trim()) ? "" : "Enter an email address";
+      if (k === "phone") return phoneE164(p.code, p.phone) ? "" : !/^\+[1-9]\d{0,3}$/.test(p.code || "") ? "Enter a country code, like +971" : "Enter a phone number, like 50 123 4567";
       return "";
     }
     function show(fieldKey, msg) {
@@ -544,6 +584,7 @@
     form.addEventListener("input", (ev) => {
       const t = ev.target, mi = t.closest(".member")?.dataset.i;
       if (t.id === "team") state.team = t.value;
+      else if (t.id === "agree") state.agree = t.checked;
       else if (t.id === "optin") state.optin = t.checked;
       else if (mi !== undefined && t.dataset.k) {
         const p = state.people[+mi];
@@ -568,6 +609,7 @@
     form.addEventListener("change", (ev) => {
       const t = ev.target;
       if (t.name === "count") { state.count = +t.value; drawMembers(); live(`${state.count} member sections shown`); save(); }
+      if (t.id === "agree") { state.agree = t.checked; if (tried) check("agree"); save(); }
       if (t.id === "optin") { state.optin = t.checked; save(); }
     });
     form.addEventListener("focusout", (ev) => {
@@ -646,7 +688,7 @@
       ev.preventDefault();
       if (sending) return;
       tried = true;
-      const keys = [...(one ? [] : ["team"]), "uni", ...state.people.slice(0, state.count).flatMap((_, i) => ["name", "email", "phone"].map((k) => `m${i}-${k}`))];
+      const keys = [...(one ? [] : ["team"]), "uni", ...state.people.slice(0, state.count).flatMap((_, i) => ["name", "email", "phone"].map((k) => `m${i}-${k}`)), "agree"];
       const errs = keys.map((k) => [k, check(k)]).filter(([, m]) => m);
       if (errs.length) {
         const f = host.querySelector(`[data-f="${errs[0][0]}"]`);
@@ -656,41 +698,34 @@
         return;
       }
       formErr(""); document.title = `${e.name}, Inara 2026`;
-      if (PREVIEW) {
-        host.innerHTML = `
-          <div class="reg-card preview-done">
-            <p class="kicker">Preview</p>
-            <h2 class="h2" id="reg-h" tabindex="-1">Registrations aren't being saved yet</h2>
-            <p class="lede">This form is a preview. Registrations will move to the university's registration system soon. Nothing you typed was sent or saved.</p>
-            <a class="btn ghost" href="#about" data-tab="about">Back to ${esc(e.name)}</a>
-          </div>`;
-        try { localStorage.removeItem(key); } catch (_) {}
-        host.scrollIntoView({ block: "start" }); host.querySelector("#reg-h").focus({ preventScroll: true });
-        return;
-      }
       const entry = {
-        fest: "inara", id: formId, event: e.slug, team: one ? "" : state.team.trim(),
-        university: state.uni.trim(), universityListed: !state.uniOther, optin: !!state.optin,
-        members: state.people.slice(0, state.count).map((p) => ({ name: p.name.trim(), email: p.email.trim().toLowerCase(), phone: phoneE164(p.code, p.phone) })),
+        id: formId, event: e.slug, team: one ? "" : state.team.trim(), university: state.uni.trim(), universityListed: !state.uniOther,
+        agree: state.agree, optin: !!state.optin,
+        members: state.people.slice(0, state.count).map((p, i) => ({
+          lead: i === 0,
+          name: i > 0 && ask(e, "name") === "lead" ? "" : p.name.trim(),
+          email: i > 0 && ask(e, "email") === "lead" ? "" : p.email.trim().toLowerCase(),
+          phone: i > 0 && (ask(e, "phone") === "lead" || !p.phone.trim()) ? "" : phoneE164(p.code, p.phone),
+        })),
       };
       const btn = form.querySelector("[type=submit]");
       sending = true; btn.disabled = true; btn.setAttribute("aria-busy", "true"); btn.textContent = "Registering…";
       try {
-        if (API) {
-          const res = await fetch(`${API}/register`, { method: "POST", headers: { "Content-Type": "application/json", "Idempotency-Key": formId }, body: JSON.stringify({ ...entry, website: $("#website").value }) });
-          const data = await res.json().catch(() => ({}));
-          if (!res.ok) {
-            const x = new Error(res.status === 503 ? "The registration service is busy. Try again in a minute" : data.error || "We couldn't save your registration");
-            x.shown = true; throw x;
-          }
-          entry.ref = data.ref;
-        }
+        const res = await fetch(`${API}/register.php`, { method: "POST", headers: { "Content-Type": "application/json", "Idempotency-Key": formId }, body: JSON.stringify({ ...entry, fest: "inara", website: $("#website").value }) });
+        const data = await res.json().catch(() => ({}));
+        // no JSON error means the API itself didn't answer (not installed, or the server failed)
+        const said = typeof data.error === "string" ? data.error : "";
+        if (!res.ok) throw Object.assign(new Error(said || "Registration isn't working right now"), { status: said ? res.status : 503 });
         try { localStorage.removeItem(key); } catch (_) {}
         done(e, host, entry);
       } catch (err) {
         sending = false; btn.disabled = false; btn.removeAttribute("aria-busy"); btn.textContent = one ? "Register" : "Register team";
-        const msg = err.shown ? err.message.replace(/[.!?]+$/, "") + "." : "We couldn't reach the registration service. Check your connection and try again.";
-        formErr(`${msg} Your details are still here.`);
+        // a refusal (event closed, a bad field) is final; a server or network failure is worth retrying
+        const retry = !err.status || err.status >= 500 || err.status === 429;
+        // the browser's own wording for "no connection" (NetworkError, Failed to fetch) means nothing to people
+        if (!err.status) err = new Error("We couldn't reach the registration service");
+        const msg = esc(err.message.replace(/[.!?]+$/, "")) + ".";
+        formErr(`${one ? "You aren't" : "Your team isn't"} registered yet. ${msg}${retry ? ` Your details are still here${/try again|wait/i.test(err.message) ? "" : ", so try again in a minute"}.${contactLine(e)}` : ""}`);
       }
     });
   }
@@ -702,11 +737,12 @@
       <div class="reg-card">
         <p class="kicker">You're in</p>
         <h2 class="h2" id="reg-h">${one ? `You're registered for ${esc(e.name)}` : `${esc(entry.team)} is registered for ${esc(e.name)}`}</h2>
-        <p class="lede">${entry.ref ? `Reference <strong>${esc(entry.ref)}</strong>. ` : ""}${esc(entry.university)}. ${entry.members.map((m) => esc(m.name)).join(", ")}.</p>
+        <p class="lede">${esc(entry.university)}. ${entry.members.map((m) => esc(m.name)).filter(Boolean).join(", ")}.</p>
         <ol class="next">
-          <li><h3>Check your email</h3><p>A confirmation email will follow. If you don't see it, look in spam.</p></li>
+          ${e.confirmation ? `<li><h3>What happens next</h3><p>${esc(e.confirmation)}</p></li>` : ""}
+          <li><h3>Check your email</h3><p>The organizers contact ${one ? "you" : "your team lead"} by email before the fest.</p></li>
           ${e.prelim ? `<li><h3>Get ready for the online round</h3><p>${esc(e.prelim)} We'll email the details.</p></li>` : `<li><h3>Watch for the schedule</h3><p>We email the timing before the fest.</p></li>`}
-          <li><h3>Got something wrong?</h3><p>Reply to the confirmation email with the fix and we'll update it.</p></li>
+          <li><h3>Got something wrong?</h3><p>Email the organizers${one ? "" : " from the team lead's address"} with the fix, and they will update ${one ? "your registration" : "your team"}.</p></li>
         </ol>
         ${entry.optin ? `<p class="fine">You'll also hear from us about future IIT Delhi – Abu Dhabi events.</p>` : ""}
         <a class="btn ghost" href="${link(`${root}#events`)}">See more events</a>

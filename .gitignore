@@ -12,3 +12,6 @@ dance-showcase/
 mono-act/
 short-films/
 spoken-word/
+
+# the API settings hold the Zoho keys; never commit them
+api/config.php
