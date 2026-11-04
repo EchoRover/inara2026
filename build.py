@@ -34,18 +34,21 @@ TEMPLATE = """<!doctype html>
 <body data-page="{page}" data-event="{slug}">
 <a class="skip" href="#main">Skip to content</a>
 <header class="bar" id="bar">
-  <div class="brand-row"><a class="inst" href="https://www.iitdabudhabi.ac.ae" target="_blank" rel="noopener"><img src="../assets/iitdad-logo-carbon.png" alt="IIT Delhi - Abu Dhabi" width="215" height="60"></a><a class="brand" href="../" data-home aria-label="Inara home"><img src="../assets/inara-logo-240.webp" alt="Inara 2026" width="111" height="56"></a></div>
+  <div class="brand-row"><a class="inst" href="https://www.iitdabudhabi.ac.ae" target="_blank" rel="noopener"><img src="../assets/iitdad-logo-carbon.png" alt="IIT Delhi – Abu Dhabi" width="215" height="60"></a><a class="brand" href="../" data-home aria-label="Inara home"><img src="../assets/inara-logo-240.webp" alt="Inara 2026" width="111" height="56"></a></div>
   <nav class="bar-nav" aria-label="Main"><a href="../#events" data-home>Events</a><a href="../schedule/" data-home>Schedule</a><a href="../#where" data-home>Where we are</a><a class="sister" href="https://afkar2026.vercel.app/">Afkar</a></nav>
 </header>
 <main id="main" tabindex="-1"></main>
 <footer class="foot">
-  <div class="foot-top">
-    <a class="foot-logo" href="https://www.iitdabudhabi.ac.ae" target="_blank" rel="noopener"><img src="../assets/iitdad-logo-white.png" alt="IIT Delhi - Abu Dhabi" width="287" height="80"></a>
+  <div class="foot-inner">
+    <a class="foot-logo" href="https://www.iitdabudhabi.ac.ae" target="_blank" rel="noopener"><img src="../assets/iitdad-logo-white.png" alt="IIT Delhi – Abu Dhabi" width="287" height="80"></a>
     <nav class="foot-links" aria-label="Footer"><a href="../#events" data-home>Events</a><a href="../schedule/" data-home>Schedule</a><a href="../#where" data-home>Where we are</a><a href="https://afkar2026.vercel.app/">Afkar 2026</a><a href="https://www.iitdabudhabi.ac.ae" target="_blank" rel="noopener">iitdabudhabi.ac.ae</a></nav>
+    <div class="foot-rule" aria-hidden="true"></div>
+    <p class="copy">&copy; 2026 Indian Institute of Technology Delhi – Abu Dhabi</p>
+    <div class="foot-meta">
+      <p class="foot-about"><strong>Inara 2026</strong>, the Cultural Fest of IIT Delhi – Abu Dhabi. 13-15&nbsp;November, on&nbsp;campus.</p>
+      <p class="made">Afkar and Inara pages are developed and managed by the Coding Club, IIT Delhi – Abu Dhabi</p>
+    </div>
   </div>
-  <p><strong>Inara 2026</strong> is the Cultural Fest of IIT Delhi - Abu Dhabi, run by its cultural clubs. 13-15 November, 2026 on campus, open to students of every UAE university.</p>
-  <p class="copy">&copy; 2026 Indian Institute of Technology Delhi - Abu Dhabi</p>
-  <p class="made">Afkar and Inara pages are developed and managed by the Coding Club, IIT Delhi - Abu Dhabi</p>
 </footer>
 <script src="../assets/events.js" defer></script>
 <script src="../assets/scenes.js" defer></script>
@@ -67,8 +70,8 @@ for e in data["events"]:
     by = hosts if hosts.startswith("The ") else "the " + hosts
     line = (e.get("line") or e["name"]).rstrip()
     line += "" if line[-1] in ".!?" else "."
-    desc = f'{line} {e["name"]} by {by}. Inara, IIT Delhi - Abu Dhabi, 13-15 November, 2026.'
+    desc = f'{line} {e["name"]} by {by}. Inara, IIT Delhi – Abu Dhabi, 13-15 November, 2026.'
     write(e["slug"], "event", e["name"], desc)
 
 write("schedule", "schedule", "Schedule",
-      "The full Inara 2026 schedule, day by day: every quiz, show and competition. IIT Delhi - Abu Dhabi, 13-15 November, 2026.")
+      "The full Inara 2026 schedule, day by day: every quiz, show and competition. IIT Delhi – Abu Dhabi, 13-15 November, 2026.")

@@ -1,4 +1,4 @@
-/* Inara 2026, in the IIT Delhi - Abu Dhabi brand: Crimson, Carbon and Clarity, set in Montserrat.
+/* Inara 2026, in the IIT Delhi – Abu Dhabi brand: Crimson, Carbon and Clarity, set in Montserrat.
    Pages are Clarity (white) with Carbon text and Crimson accents. The moving stages (hero, event tops,
    slides, map) are Carbon, so the light in their scenes has something to shine against.
    Radiant, Solar, Nebula and Hydro support: they tint the events, never the interface.
@@ -43,7 +43,7 @@ main:focus { outline: none; }
 /* ---------- top bar ---------- */
 .bar { position: fixed; inset: 0 0 auto; z-index: 20; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px clamp(16px, 4vw, 40px); color: var(--hero-ink); transition: background 0.25s, box-shadow 0.25s; }
 /* The bar is a foggy pane like the white blocks: near-white frosted glass with the star lattice drawn faintly
-   in Crimson. The logos sit on it in their own colours (the IIT Delhi - Abu Dhabi logo in Carbon), and it is
+   in Crimson. The logos sit on it in their own colours (the IIT Delhi – Abu Dhabi logo in Carbon), and it is
    opaque enough that the moving scenes never show through behind them. */
 .bar {
   isolation: isolate; background: rgba(255, 255, 255, 0.94); color: var(--carbon);
@@ -221,19 +221,36 @@ main:focus { outline: none; }
 .more span { color: var(--ink-soft); font-weight: 600; font-size: 0.93rem; }
 
 /* ---------- footer ---------- */
-/* Carbon, with the institute's logo, laid out like the Afkar footer */
-.foot { padding: 56px max(clamp(16px, 4vw, 40px), calc((100% - 1080px) / 2)) 64px; background: var(--page); color: var(--ink-soft); border-top: 1px solid var(--line); font-size: 0.95rem; }
-.foot p { margin: 0 0 4px; max-width: 78ch; }
+/* The Afkar footer layout in Inara's Carbon: a full-width band. Row 1 the institute logo (left) and the
+   links (right), a full-width rule, row 2 the copyright (left) and the description and credit (right). */
+.foot { overflow: hidden; margin: 0; padding: 0; background: var(--page); color: var(--ink-soft); border-top: 1px solid var(--line); font-size: 0.95rem; }
 .foot strong { color: var(--ink); }
-.foot-top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 24px; margin-bottom: 28px; }
+.foot > .foot-inner { display: grid; grid-template-columns: auto 1fr; column-gap: 32px; max-width: 1160px; margin: 0 auto; padding: 0 clamp(16px, 4vw, 40px); }
 .foot-logo { display: inline-block; line-height: 0; }
 .foot-logo img { height: 80px; width: auto; }
+.foot .foot-logo { grid-column: 1; grid-row: 1; align-self: center; padding: 40px 0 36px; }
+/* the logo file has clear space built in (41 of 424 px on every side); pull it left by that much so its
+   visible edge lines up with the copyright under it */
+.foot .foot-logo img { margin-left: calc(-80px * 41 / 424); }
 .foot-links { display: flex; flex-wrap: wrap; gap: 8px 24px; font-weight: 600; }
 .foot-links a { color: var(--ink); text-decoration: none; }
 .foot-links a:hover { text-decoration: underline; text-underline-offset: 4px; }
-.foot .copy { margin-top: 16px; font-size: 0.85rem; }
-.foot .made { font-size: 0.8rem; opacity: 0.75; }
-@media (max-width: 560px) { .foot-logo img { height: 64px; } }
+.foot .foot-links { grid-column: 2; grid-row: 1; justify-self: end; align-self: center; justify-content: flex-end; padding: 36px 0 32px; }
+.foot .foot-rule { grid-column: 1 / -1; grid-row: 2; margin: 0 calc(50% - 50vw); border-top: 1px solid var(--line); }
+.foot .copy { grid-column: 1; grid-row: 3; align-self: start; margin: 0; padding: 16px 0 18px; font-size: 0.82rem; }
+.foot .foot-meta { grid-column: 2; grid-row: 3; justify-self: end; text-align: right; padding: 16px 0 18px; }
+.foot .foot-meta p { margin: 0; font-size: 0.82rem; }
+.foot .foot-meta .made { opacity: 0.75; padding-top: 2px; font-size: 0.76rem; }
+@media (max-width: 760px) {
+  .foot > .foot-inner { grid-template-columns: 1fr; }
+  .foot .foot-logo { padding-bottom: 20px; }
+  .foot .foot-links { grid-column: 1; grid-row: 2; justify-self: start; justify-content: flex-start; padding: 0 0 26px; }
+  .foot .foot-rule { grid-row: 3; }
+  .foot .copy { grid-row: 4; padding-bottom: 2px; }
+  .foot .foot-meta { grid-column: 1; grid-row: 5; justify-self: start; text-align: left; padding-top: 4px; }
+  .foot .foot-meta .made { font-size: 0.8rem; }
+}
+@media (max-width: 560px) { .foot-logo img { height: 64px; } .foot .foot-logo img { margin-left: calc(-64px * 41 / 424); } }
 
 @media (max-width: 860px) {
   .stage::after { background: linear-gradient(0deg, color-mix(in srgb, var(--page) 92%, transparent) 0%, color-mix(in srgb, var(--page) 70%, transparent) 55%, color-mix(in srgb, var(--page) 35%, transparent) 100%); }

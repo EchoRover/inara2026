@@ -12,7 +12,7 @@
   const TAU = Math.PI * 2;
   const rgba = (c, a) => `rgba(${c[0]},${c[1]},${c[2]},${a})`;
 
-  // The IIT Delhi - Abu Dhabi palette (also in styles.css). Light is Solar with Radiant embers, the lattice is a
+  // The IIT Delhi – Abu Dhabi palette (also in styles.css). Light is Solar with Radiant embers, the lattice is a
   // pale Carbon tint, lit edges are the lightest Solar tint, and the night behind it all is Carbon.
   const SOLAR = [246, 146, 57], RADIANT = [245, 75, 76], MIST = [218, 216, 216], GLOW = [252, 237, 219];
   const NIGHT = ["#222223", "#282829"];

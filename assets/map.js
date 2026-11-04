@@ -114,7 +114,7 @@
         const drop = (1 - ease(pin)) * 40;
         ctx.globalAlpha = 1; ctx.fillStyle = colors.accent; ctx.beginPath(); ctx.arc(px, py - drop, 8, 0, 7); ctx.fill();
         ctx.strokeStyle = colors.page; ctx.lineWidth = 3; ctx.stroke();
-        label("IIT Delhi - Abu Dhabi", px + 10, py, { font: "600 17px Inter, sans-serif", color: colors.ink, alpha: clamp((t - 5.8) / 0.6, 0, 1) });
+        label("IIT Delhi – Abu Dhabi", px + 10, py, { font: "600 17px Inter, sans-serif", color: colors.ink, alpha: clamp((t - 5.8) / 0.6, 0, 1) });
       }
       // neighbouring universities
       for (const [name, la, lo, side] of window.INARA_UNIS || []) {
