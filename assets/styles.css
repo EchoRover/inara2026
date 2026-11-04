@@ -615,3 +615,8 @@ body::after { background: var(--crimson); opacity: 0.06; -webkit-mask: var(--pat
   60% { transform: scale(0.75) rotate(60deg); opacity: 0.85; }
 }
 @media (prefers-reduced-motion: reduce) { .twinkles { display: none; } }
+
+/* hero: centre the logo, line and buttons in the space below the header bar (88px, 56px on phones),
+   not in the full screen height */
+.hero .stage-content { padding-top: calc(88px + 48px); padding-bottom: 48px; }
+@media (max-width: 640px) { .hero .stage-content { padding-top: calc(56px + 40px); padding-bottom: 40px; } }
