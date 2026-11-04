@@ -55,12 +55,12 @@ main:focus { outline: none; }
 @media (prefers-reduced-transparency: reduce) { .bar { background: #ffffff; } }
 .brand-row { display: flex; align-items: center; gap: 14px; }
 .inst { display: block; line-height: 0; }
-.inst img { height: 60px; width: auto; }
+.inst img { height: 49px; width: auto; }
 .brand { display: flex; flex-direction: column; text-decoration: none; line-height: 1; }
 .brand-row .brand { padding-left: 14px; border-left: 1px solid var(--line); }
 .brand img { display: block; height: 56px; width: auto; }
 @media (max-width: 640px) {
-  .inst img { height: 36px; }
+  .inst img { height: 29px; }
   .brand-row { gap: 10px; } .brand-row .brand { padding-left: 10px; }
   .brand img { height: 36px; }
   .bar { gap: 10px; }
@@ -68,13 +68,13 @@ main:focus { outline: none; }
 }
 @media (max-width: 400px) {
   .bar { padding-left: 14px; padding-right: 14px; }
-  .inst img { height: 28px; }
+  .inst img { height: 23px; }
   .brand-row { gap: 8px; } .brand-row .brand { padding-left: 8px; }
   .brand img { height: 28px; }
   .bar-nav { gap: 10px; font-size: 0.84rem; }
 }
 @media (max-width: 340px) {
-  .inst img { height: 23px; }
+  .inst img { height: 19px; }
   .brand-row { gap: 6px; } .brand-row .brand { padding-left: 6px; }
   .brand img { height: 23px; }
   .bar-nav { gap: 8px; font-size: 0.8rem; }
