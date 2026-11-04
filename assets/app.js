@@ -784,20 +784,6 @@
     // UAE time is GMT+4 all year, so each slot is one fixed moment wherever the visitor is
     const at = (date, m) => Date.parse(`${date}T00:00:00+04:00`) + m * 60000;
     const span = (d, e) => `data-start="${at(d.date, mins(e.time[0]))}" data-end="${at(d.date, mins(e.time[1]))}"`;
-    const h0 = slotted.length ? Math.floor(Math.min(...slotted.map((e) => mins(e.time[0]))) / 60) : 0;
-    const h1 = slotted.length ? Math.ceil(Math.max(...slotted.map((e) => mins(e.time[1]))) / 60) : 0;
-    // events that overlap on the same day share the column side by side
-    function lanes(list) {
-      const ends = [], lane = new Map();
-      list.filter(timed).forEach((e) => {
-        const [s, en] = e.time.map(mins);
-        let i = ends.findIndex((x) => x <= s);
-        if (i < 0) i = ends.length;
-        ends[i] = en; lane.set(e, i);
-      });
-      return { lane, n: Math.max(1, ends.length) };
-    }
-
     const top = `
       <section class="stage ev-top sched-top" aria-labelledby="sc-h">
         <canvas data-scene="lanterns" aria-hidden="true"></canvas>
@@ -809,7 +795,6 @@
       </section>`;
 
     const navItems = [
-      slotted.length && ["glance", "At a glance"],
       ...perDay.map((d) => [d.id, d.label]),
       later.length && ["later", "To be confirmed"],
     ].filter(Boolean);
@@ -818,41 +803,30 @@
         <div class="wrap">${navItems.map(([id, t]) => `<a class="tab" href="#${id}">${esc(t)}</a>`).join("")}<span class="spacer"></span><span class="tz">All times UAE (GMT+4)</span></div>
       </nav>`;
 
-    const glance = slotted.length ? `
-      <section class="section glance-sec" id="glance" aria-labelledby="glance-h">
-        <div class="wrap">
-          <h2 class="h2" id="glance-h">At a glance</h2>
-          <div class="glance" style="--h0:${h0};--rows:${h1 - h0};--days:${perDay.length}">
-            <div class="g-axis" aria-hidden="true">${Array.from({ length: h1 - h0 + 1 }, (_, k) => h0 + k).filter((h) => (h - h0) % 2 === 0).map((h) => `<span style="--at:${h}">${clock(h * 60)}</span>`).join("")}</div>
-            ${perDay.map((d) => { const { lane, n } = lanes(d.list); return `
-            <div class="g-day">
-              <h3 class="g-head"><a href="#${d.id}">${esc(d.label)}</a></h3>
-              <div class="g-col" data-date="${d.date}">
-                ${d.list.filter(timed).map((e) => { const [s, en] = e.time.map(mins); return `<a class="g-ev scene-${e.scene}${en - s <= 90 ? " short" : ""}" href="${eventHref(e)}" ${span(d, e)} style="--s:${s / 60};--e:${en / 60};--lane:${lane.get(e)};--lanes:${n}"><b>${esc(e.name)}</b><span>${esc(timeRange(e))}</span></a>`; }).join("")}
-                <i class="g-now" hidden></i>
-              </div>
-            </div>`; }).join("")}
-          </div>
+    // One long programme: each day opens with an arch "gate", and its events sit as cards on alternating
+    // sides of a thread down the middle, each joined to it by a diamond in the event's colour.
+    let side = 0;
+    const stop = (d, e) => `
+          <li class="pg ${side++ % 2 ? "right" : "left"} scene-${e.scene}" ${timed(e) ? span(d, e) : ""}>
+            <span class="pg-dot" aria-hidden="true"></span>
+            <div class="pg-card">
+              <span class="s-live" hidden></span>
+              <p class="pg-time">${timed(e) ? timeRange(e) : "Time to be confirmed"}</p>
+              <a class="pg-name" href="${eventHref(e)}">${esc(e.name)}</a>
+              <p class="pg-meta"><span>${esc(hosts(e))}</span>${known(e.venue) ? `<span>${esc(e.venue)}</span>` : ""}</p>
+              <p class="pg-status"><span>${esc(status(e))}</span>${e.note ? `<span>${esc(e.note)}</span>` : ""}</p>
+              ${e.open ? `<a class="btn ghost pg-btn" href="${eventHref(e, "#register")}">${solo(e) ? "Register" : "Register your team"}</a>` : ""}
+            </div>
+          </li>`;
+    const programme = `
+      <section class="programme" aria-label="Programme">
+        <div class="wrap pg-wrap">${perDay.map((d) => { const [wd, num, mon] = d.name.split(" "); return `
+          <section class="pg-day" id="${d.id}" aria-labelledby="${d.id}-h">
+            <h2 class="gate" id="${d.id}-h"><span class="g-wd">${esc(wd)}</span><span class="g-num">${esc(num)}</span><span class="g-mon">${esc(mon)}</span></h2>
+            <ol class="pg-list">${d.list.map((e) => stop(d, e)).join("")}</ol>
+          </section>`; }).join("")}
         </div>
-      </section>` : "";
-
-    const row = (d, e) => `
-      <li class="slot scene-${e.scene}" ${timed(e) ? span(d, e) : ""}>
-        <div class="s-time">${timed(e) ? `<b>${timeRange(e)}</b><span>${esc(dur(e))}</span>` : `<b>Time TBC</b><span>${esc(dur(e))}</span>`}</div>
-        <div class="s-body">
-          <span class="s-live" hidden></span>
-          <a class="s-name" href="${eventHref(e)}">${esc(e.name)}</a>
-          <p class="s-meta"><span>${esc(hosts(e))}</span>${known(e.venue) ? `<span>${esc(e.venue)}</span>` : ""}<span class="s-status">${esc(status(e))}</span>${e.note ? `<span>${esc(e.note)}</span>` : ""}</p>
-        </div>
-        ${e.open ? `<a class="btn ghost s-btn" href="${eventHref(e, "#register")}">${solo(e) ? "Register" : "Register your team"}</a>` : ""}
-      </li>`;
-    const dayLists = perDay.map((d) => `
-      <section class="sched-day" id="${d.id}" aria-labelledby="${d.id}-h">
-        <div class="wrap">
-          <h2 class="h2" id="${d.id}-h">${esc(d.name)}</h2>
-          <ol class="slots">${d.list.map((e) => row(d, e)).join("")}</ol>
-        </div>
-      </section>`).join("");
+      </section>`;
 
     const listOf = (list) => `<ul class="more">${list.map((e) => `<li><a href="${eventHref(e)}">${esc(e.name)}</a><span>${esc([hosts(e), known(e.venue) ? e.venue : "", dur(e)].filter(Boolean).join(", "))}</span></li>`).join("")}</ul>`;
     const tbc = later.length ? `
@@ -870,9 +844,9 @@
         </div>
       </section>` : `<div style="padding-bottom:96px"></div>`;
 
-    main.innerHTML = top + nav + glance + dayLists + tbc + end;
+    main.innerHTML = top + nav + programme + tbc + end;
 
-    // Live during the fest: "On now" and "Up next" tags, earlier slots dimmed, and a line on the clock.
+    // Live during the fest: "On now" and "Up next" tags, and earlier events dimmed.
     function live() {
       const now = Date.now();
       const els = [...main.querySelectorAll("[data-start]")];
@@ -887,11 +861,6 @@
         el.classList.toggle("past", festLeft && now >= en);
         const t = el.querySelector(".s-live");
         if (t) { t.hidden = !(on || next); t.textContent = on ? "On now" : next ? "Up next" : ""; }
-      });
-      main.querySelectorAll(".g-col").forEach((col) => {
-        const a = at(col.dataset.date, h0 * 60), b = at(col.dataset.date, h1 * 60), line = col.querySelector(".g-now");
-        line.hidden = !(now >= a && now <= b);
-        if (!line.hidden) line.style.setProperty("--t", String(h0 + (now - a) / 36e5));
       });
     }
     live();
