@@ -103,7 +103,7 @@
               <span class="t-status">${status(e)}</span>${tag(e)}
               <span class="t-name">${esc(e.name)}</span>
               <span class="t-host">${esc(hosts(e))}</span>
-              ${e.open ? `<span class="t-facts">${esc([teamLine(e), hasPrizes(e) ? `${pool(e)} in prizes` : ""].filter(Boolean).join(", "))}</span>` : free(e) && e.note ? `<span class="t-facts">${esc(e.note)}</span>` : ""}
+              ${e.open && hasPrizes(e) ? `<span class="t-facts">${esc(`${pool(e)} in prizes`)}</span>` : free(e) && e.note ? `<span class="t-facts">${esc(e.note)}</span>` : ""}
               ${timed(e) ? `<span class="t-when">${esc(`${shortDay(e.day)}, ${timeRange(e)}`)}</span>` : ""}
             </a></li>`).join("")}</ul>
         </div>
