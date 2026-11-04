@@ -478,8 +478,14 @@
           <section class="reg-sec">
             <div class="field" data-f="agree"><p class="err"></p>
               <label class="checkline"><input type="checkbox" id="agree" ${state.agree ? "checked" : ""}><span>${one ? `I've read the ${guideWord(e)} and agree to follow them.` : `I've read the ${guideWord(e)}, and everyone on my team agrees to follow them.`}</span></label></div>
+            <div class="media-note">
+              <p>Photos and videos will be taken at the event.</p>
+              <details class="policy">
+                <summary>Photo and video policy</summary>
+                <p>Photos and videos at Inara are taken by IIT Delhi – Abu Dhabi. They are used only to publicize and promote IIT Delhi – Abu Dhabi and its events, for example on its website, social media and printed materials.</p>
+                <p>If ${one ? "you would" : "someone on your team would"} rather not appear, tell the organizers at the registration desk on the day, and we will make sure ${one ? "you are" : "they are"} not featured.</p>
+              </details></div>
             <label class="checkline"><input type="checkbox" id="optin" ${state.optin ? "checked" : ""}><span>Email me about future IIT Delhi – Abu Dhabi events</span></label>
-            <p class="fine">Photos and videos are taken at the fest and may be shared by IIT Delhi – Abu Dhabi. If ${one ? "you" : "someone on your team"} would rather not appear, tell us at the desk on the day.</p>
           </section>
 
           <input type="text" name="website" id="website" tabindex="-1" autocomplete="off" aria-hidden="true" class="trap">

@@ -638,3 +638,12 @@ body::after { background: var(--crimson); opacity: 0.06; -webkit-mask: var(--pat
 .hero .lanterns { z-index: 0; }
 .hero-logo img { filter: none; }
 .hero .btn.ghost { color: var(--carbon); }
+
+/* the photo and video note in the form, as on Afkar: one line, the full policy behind a toggle */
+.media-note { margin: 4px 0; font-size: 0.95rem; color: var(--ink-soft); }
+.media-note > p { margin: 0; }
+.policy { margin: 6px 0 0; font-size: 0.9rem; color: var(--ink-soft); }
+.policy summary { cursor: pointer; font-weight: 600; color: var(--accent); width: fit-content; }
+.policy p { margin: 8px 0 0; max-width: 60ch; }
+/* the guidelines tick box sits inside a .field (for its error line); keep it laid out like the other tick box */
+.reg .field > label.checkline { display: flex; margin: 0; font-size: 1rem; }
