@@ -626,3 +626,13 @@ body::after { background: var(--crimson); opacity: 0.06; -webkit-mask: var(--pat
 /* the optional "Questions" block on an event page (events.js "contact") */
 .contact-ways { font-weight: 600; }
 .contact-ways a { color: var(--ink); }
+
+/* hero logo: the official logo in its own colours (maroon and gold), so the light comes to it instead.
+   A warm pool of light sits behind it, as if the logo were lit, and fades into the Carbon scene. */
+.hero-logo::before {
+  content: ""; position: absolute; z-index: -1; left: 50%; top: 50%; width: 150%; height: 190%; transform: translate(-50%, -50%);
+  background: radial-gradient(closest-side, rgba(255, 250, 242, 0.98) 0%, rgba(255, 246, 232, 0.94) 48%, rgba(253, 236, 210, 0.6) 66%, rgba(250, 224, 190, 0.22) 82%, rgba(250, 224, 190, 0) 100%);
+  pointer-events: none;
+}
+.hero-logo { isolation: isolate; }
+.hero-logo img { filter: none; }
