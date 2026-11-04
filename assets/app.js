@@ -464,7 +464,7 @@
     const sizeSec = one ? "" : `
           <section class="reg-sec" aria-labelledby="s-size">
             <h3 class="sec-t" id="s-size">Team size</h3>
-            <div class="seg" role="radiogroup" aria-labelledby="s-size">${sizes.map((n) => `<label><input type="radio" name="count" value="${n}" ${n === state.count ? "checked" : ""}><span>${n} people</span></label>`).join("")}</div>
+            <div class="seg" role="radiogroup" aria-labelledby="s-size">${sizes.map((n) => `<label><input type="radio" name="count" value="${n}" ${n === state.count ? "checked" : ""}><span>${n} ${n === 1 ? "person" : "people"}</span></label>`).join("")}</div>
           </section>`;
     host.innerHTML = `
       <div class="reg-grid">
