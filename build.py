@@ -43,7 +43,7 @@ TEMPLATE = """<!doctype html>
     <a class="foot-logo" href="https://www.iitdabudhabi.ac.ae" target="_blank" rel="noopener"><img src="../assets/iitdad-logo-white.png" alt="IIT Delhi - Abu Dhabi" width="287" height="80"></a>
     <nav class="foot-links" aria-label="Footer"><a href="../#events" data-home>Events</a><a href="../schedule/" data-home>Schedule</a><a href="../#where" data-home>Where we are</a><a href="https://afkar2026.vercel.app/">Afkar 2026</a><a href="https://www.iitdabudhabi.ac.ae" target="_blank" rel="noopener">iitdabudhabi.ac.ae</a></nav>
   </div>
-  <p><strong>Inara 2026</strong> is the cultural fest of IIT Delhi - Abu Dhabi, run by its cultural clubs. 13 to 15 November 2026 on campus, open to students of every UAE university.</p>
+  <p><strong>Inara 2026</strong> is the cultural fest of IIT Delhi - Abu Dhabi, run by its cultural clubs. 13-15 November, 2026 on campus, open to students of every UAE university.</p>
   <p class="copy">&copy; 2026 Indian Institute of Technology Delhi - Abu Dhabi</p>
   <p class="made">Afkar and Inara pages are developed and managed by the Coding Club, IIT Delhi - Abu Dhabi</p>
 </footer>
@@ -65,8 +65,10 @@ def write(slug, page, name, desc):
 for e in data["events"]:
     hosts = " and ".join(data["clubs"][h] for h in e["hosts"])
     by = hosts if hosts.startswith("The ") else "the " + hosts
-    desc = f'{e.get("line") or e["name"]} {e["name"]} by {by}. Inara, IIT Delhi - Abu Dhabi, 13 to 15 November 2026.'
+    line = (e.get("line") or e["name"]).rstrip()
+    line += "" if line[-1] in ".!?" else "."
+    desc = f'{line} {e["name"]} by {by}. Inara, IIT Delhi - Abu Dhabi, 13-15 November, 2026.'
     write(e["slug"], "event", e["name"], desc)
 
 write("schedule", "schedule", "Schedule",
-      "The full Inara 2026 schedule, day by day: every quiz, show and competition. IIT Delhi - Abu Dhabi, 13 to 15 November 2026.")
+      "The full Inara 2026 schedule, day by day: every quiz, show and competition. IIT Delhi - Abu Dhabi, 13-15 November, 2026.")
