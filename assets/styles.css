@@ -1,4 +1,4 @@
-/* Inara 2026, in the IIT Delhi Abu Dhabi brand: Crimson, Carbon and Clarity, set in Montserrat.
+/* Inara 2026, in the IIT Delhi - Abu Dhabi brand: Crimson, Carbon and Clarity, set in Montserrat.
    Pages are Clarity (white) with Carbon text and Crimson accents. The moving stages (hero, event tops,
    slides, map) are Carbon, so the light in their scenes has something to shine against.
    Radiant, Solar, Nebula and Hydro support: they tint the events, never the interface.
@@ -15,7 +15,7 @@
   color-scheme: light;
 }
 /* the Carbon stages and footer: the same token names with dark values, so everything inside follows */
-.stage, .slides, .where, .foot, .bar {
+.stage, .slides, .where, .foot {
   --page: var(--carbon); --pop: #373837; --ink: #ffffff; --ink-soft: #dad8d8; --line: rgba(218, 216, 216, 0.2);
   --surface: rgba(255, 255, 255, 0.06); --accent: #f36e68; --field: rgba(255, 255, 255, 0.07); --field-line: rgba(218, 216, 216, 0.4); --danger: #f7a3a1;
   color: var(--ink); color-scheme: dark;
@@ -42,8 +42,11 @@ main:focus { outline: none; }
 
 /* ---------- top bar ---------- */
 .bar { position: fixed; inset: 0 0 auto; z-index: 20; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px clamp(16px, 4vw, 40px); color: var(--hero-ink); transition: background 0.25s, box-shadow 0.25s; }
-/* The IIT Delhi Abu Dhabi logo always sits on a solid Carbon bar, never over the moving scenes (brand rule, as on Afkar). */
-.bar { background: var(--page); box-shadow: 0 1px 0 var(--line); }
+/* The logos always sit on a solid bar, never over the moving scenes (brand rule, as on Afkar). The bar is Carbon's
+   lighter tint #afb0af: the darkest grey from the primary deck on which the Inara logo's own maroon still reads
+   (3.2 to 5.6:1). Text and the IIT Delhi - Abu Dhabi logo are Carbon on it (6.8:1). */
+.bar { background: #afb0af; color: var(--carbon); box-shadow: 0 1px 0 rgba(40, 40, 41, 0.18); }
+.bar .brand-row .brand { border-left-color: rgba(40, 40, 41, 0.25); }
 .brand-row { display: flex; align-items: center; gap: 14px; }
 .inst { display: block; line-height: 0; }
 .inst img { height: 60px; width: auto; }
@@ -569,18 +572,11 @@ body::after { background: var(--crimson); opacity: 0.06; -webkit-mask: var(--pat
 }
 
 /* ---------- the Inara logo in the hero, twinkling ----------
-   The official logo, with its maroon lifted for Carbon the way the site lifts Crimson (towards #f36e68).
-   Sparkles bloom and fade over it, and now and then a glint of light runs across the letters. */
+   On the dark hero the logo's maroon is lifted towards #f36e68, the way the site lifts Crimson on Carbon,
+   so it reads against the scene; the gold is the logo's own. The bar uses the logo in its original colours.
+   Sparkles bloom and fade over it. */
 .hero-logo { position: relative; width: min(620px, 84vw); margin: 0 auto; line-height: 0; }
 .hero-logo img { display: block; width: 100%; height: auto; filter: drop-shadow(0 6px 28px rgba(20, 20, 20, 0.6)); }
-.glint {
-  position: absolute; inset: 0; pointer-events: none;
-  background: linear-gradient(105deg, transparent 42%, rgba(255, 246, 230, 0.6) 50%, transparent 58%) no-repeat;
-  background-size: 300% 100%; background-position: 150% 0;
-  -webkit-mask: url("inara-logo-1240.webp") 0 0 / 100% 100% no-repeat; mask: url("inara-logo-1240.webp") 0 0 / 100% 100% no-repeat;
-  animation: glint 7s ease-in-out 1.2s infinite;
-}
-@keyframes glint { 0% { background-position: 150% 0; } 26%, 100% { background-position: -50% 0; } }
 .twinkles i { position: absolute; left: var(--x); top: var(--y); width: var(--s); aspect-ratio: 1; transform: translate(-50%, -50%); filter: drop-shadow(0 0 6px rgba(255, 228, 180, 0.9)); }
 .twinkles i::before {
   content: ""; position: absolute; inset: 0;
@@ -593,4 +589,4 @@ body::after { background: var(--crimson); opacity: 0.06; -webkit-mask: var(--pat
   45% { transform: scale(1) rotate(45deg); opacity: 1; }
   60% { transform: scale(0.75) rotate(60deg); opacity: 0.85; }
 }
-@media (prefers-reduced-motion: reduce) { .glint, .twinkles { display: none; } }
+@media (prefers-reduced-motion: reduce) { .twinkles { display: none; } }

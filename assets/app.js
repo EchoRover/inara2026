@@ -86,8 +86,8 @@
       <section class="stage hero" id="top" aria-label="Inara 2026">
         <canvas data-scene="hero" aria-hidden="true"></canvas>
         <div class="stage-content">
-          <h1 class="hero-logo"><img src="assets/inara-logo-1240.webp" alt="Inara 2026" width="620" height="313"><span class="glint" aria-hidden="true"></span><span class="twinkles" aria-hidden="true">${TWINKLES}</span></h1>
-          <span class="hero-inst">The cultural fest of IIT Delhi Abu Dhabi</span>
+          <h1 class="hero-logo"><img src="assets/inara-logo-hero.webp" alt="Inara 2026" width="620" height="313"><span class="twinkles" aria-hidden="true">${TWINKLES}</span></h1>
+          <span class="hero-inst">The cultural fest of IIT Delhi - Abu Dhabi</span>
           <span class="hero-meta">13 to 15 November 2026</span>
           <div class="hero-actions"><a class="btn" href="#events">See the events</a><a class="btn ghost" href="${link("schedule/")}">See the schedule</a></div>
         </div>
@@ -436,8 +436,8 @@
           </section>`}
 
           <section class="reg-sec">
-            <label class="checkline"><input type="checkbox" id="optin" ${state.optin ? "checked" : ""}><span>Email me about future IIT Delhi Abu Dhabi events</span></label>
-            <p class="fine">Photos and videos are taken at the fest and may be shared by IIT Delhi Abu Dhabi. If ${one ? "you" : "someone on your team"} would rather not appear, tell us at the desk on the day.</p>
+            <label class="checkline"><input type="checkbox" id="optin" ${state.optin ? "checked" : ""}><span>Email me about future IIT Delhi - Abu Dhabi events</span></label>
+            <p class="fine">Photos and videos are taken at the fest and may be shared by IIT Delhi - Abu Dhabi. If ${one ? "you" : "someone on your team"} would rather not appear, tell us at the desk on the day.</p>
           </section>
 
           <input type="text" name="website" id="website" tabindex="-1" autocomplete="off" aria-hidden="true" class="trap">
@@ -705,7 +705,7 @@
           ${e.prelim ? `<li><h3>Get ready for the online round</h3><p>${esc(e.prelim)} We'll email the details.</p></li>` : `<li><h3>Watch for the schedule</h3><p>We email the timing before the fest.</p></li>`}
           <li><h3>Got something wrong?</h3><p>Reply to the confirmation email with the fix and we'll update it.</p></li>
         </ol>
-        ${entry.optin ? `<p class="fine">You'll also hear from us about future IIT Delhi Abu Dhabi events.</p>` : ""}
+        ${entry.optin ? `<p class="fine">You'll also hear from us about future IIT Delhi - Abu Dhabi events.</p>` : ""}
         <a class="btn ghost" href="${link(`${root}#events`)}">See more events</a>
       </div>`;
     host.scrollIntoView({ block: "start" });
