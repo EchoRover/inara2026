@@ -45,7 +45,7 @@ TEMPLATE = """<!doctype html>
   </div>
   <p><strong>Inara 2026</strong> is the cultural fest of IIT Delhi – Abu Dhabi, run by its cultural clubs. 13 to 15 November 2026 on campus, open to students of every UAE university.</p>
   <p class="copy">&copy; 2026 Indian Institute of Technology Delhi Abu Dhabi</p>
-  <p class="made">Website by the Coding Club, IIT Delhi – Abu Dhabi</p>
+  <p class="made">Afkar and Inara pages are developed and managed by the Coding Club, IIT Delhi – Abu Dhabi</p>
 </footer>
 <script src="../assets/events.js" defer></script>
 <script src="../assets/scenes.js" defer></script>
