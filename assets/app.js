@@ -54,10 +54,10 @@
   }
   // "guidelines" is a full web address, or a file in the site like "rulebooks/error-404.pdf".
   // Shows have no rules, so they get no button at all.
+  const guidelinesHref = (e) => (/^https?:\/\//.test(e.guidelines) ? e.guidelines : root + e.guidelines);
   function guidelinesBtn(e, cls = "btn ghost") {
     if (e.guidelines) {
-      const href = /^https?:\/\//.test(e.guidelines) ? e.guidelines : root + e.guidelines;
-      return `<a class="${cls}" href="${esc(href)}" target="_blank" rel="noopener">Read the guidelines</a>`;
+      return `<a class="${cls}" href="${esc(guidelinesHref(e))}" target="_blank" rel="noopener">Read the guidelines</a>`;
     }
     return free(e) ? "" : `<span class="${cls}" aria-disabled="true">Guidelines will be released soon</span>`;
   }
@@ -411,7 +411,7 @@
       <div class="reg-grid">
         <form class="reg-form" id="reg-form" novalidate>
           <h2 class="h2" id="reg-h">${one ? "Register" : "Register your team"}</h2>
-          <p class="lede">For ${esc(e.name)}${one ? "" : `: ${esc(teamLine(e).toLowerCase())}`}${known(e.day) ? `, on ${esc(e.day)}` : ""}. <a href="#about" data-tab="about">About ${esc(e.name)}</a>${e.guidelines ? ` or read the <a href="${esc(e.guidelines)}" target="_blank" rel="noopener">guidelines</a>` : ""}</p>
+          <p class="lede">For ${esc(e.name)}${one ? "" : `: ${esc(teamLine(e).toLowerCase())}`}${known(e.day) ? `, on ${esc(e.day)}` : ""}. <a href="#about" data-tab="about">About ${esc(e.name)}</a>${e.guidelines ? ` or read the <a href="${esc(guidelinesHref(e))}" target="_blank" rel="noopener">guidelines</a>` : ""}</p>
           ${draft ? `<p class="notice">We kept what you typed last time. <button type="button" class="linkish" data-reset>Start over</button></p>` : ""}
 
           ${one ? `
