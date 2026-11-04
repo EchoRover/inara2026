@@ -301,14 +301,14 @@ body[data-page="event"] .bar { position: absolute; }
 .podium { list-style: none; margin: 8px 0 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; align-items: end; max-width: 560px; }
 .podium li { display: flex; flex-direction: column; align-items: center; text-align: center; }
 .podium .amt { font: 700 clamp(1rem, 2vw, 1.3rem)/1.15 var(--display); margin-bottom: 10px; }
-.podium .block { width: 100%; display: grid; place-items: start center; padding-top: 12px; border-radius: 14px 14px 4px 4px; background: color-mix(in srgb, var(--accent) 16%, var(--surface)); box-shadow: inset 0 0 0 1px var(--line); transform-origin: bottom; animation: rise 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+.podium .block { width: 100%; display: grid; place-items: start center; padding-top: 12px; border-radius: 14px 14px 4px 4px; background: color-mix(in srgb, var(--accent) 16%, var(--surface)); box-shadow: inset 0 0 0 1px var(--line); transform-origin: bottom; animation: podium-rise 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
 .podium .block b { font: 800 clamp(1.6rem, 3.4vw, 2.2rem)/1 var(--display); color: var(--accent); }
 .podium .p1 .block { height: 150px; background: color-mix(in srgb, var(--accent) 34%, var(--surface)); animation-delay: 0.15s; }
 .podium .p1 .block b { color: var(--ink); }
 .podium .p2 .block { height: 110px; animation-delay: 0.05s; }
 .podium .p3 .block { height: 80px; animation-delay: 0.25s; }
 .podium .place { margin-top: 8px; color: var(--ink-soft); font-size: 0.9rem; font-weight: 600; }
-@keyframes rise { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+@keyframes podium-rise { from { transform: scaleY(0); } to { transform: scaleY(1); } }
 @media (prefers-reduced-motion: reduce) { .podium .block { animation: none; } }
 
 /* ---------- registration, v2: form + live team card ---------- */
@@ -635,3 +635,41 @@ body::after { background: var(--crimson); opacity: 0.06; -webkit-mask: var(--pat
 .policy p { margin: 8px 0 0; max-width: 60ch; }
 /* the guidelines tick box sits inside a .field (for its error line); keep it laid out like the other tick box */
 .reg .field > label.checkline { display: flex; margin: 0; font-size: 1rem; }
+
+/* ---------- prizes: three lattice arches ----------
+   2nd, 1st, 3rd as arched niches like the arches of the dawn scene, each filled with the star lattice.
+   Gold from the Inara logo, Carbon's silver tint and Crimson's bronze tint. */
+.t-facts b { color: var(--ink); font-weight: 700; }
+.podium { gap: 14px; max-width: 520px; margin-top: 12px; }
+.podium .p1 { --medal: #f2b544; }
+.podium .p2 { --medal: #afb0af; }
+.podium .p3 { --medal: #bd634f; }
+.podium .block, .podium .p1 .block {
+  position: relative; isolation: isolate; overflow: hidden; padding-top: 26px;
+  border-radius: 50% 50% 6px 6px / 60px 60px 6px 6px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--medal) 34%, #fff), color-mix(in srgb, var(--medal) 14%, #fff));
+  box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--medal) 75%, transparent), 0 16px 30px -22px rgba(40, 40, 41, 0.5);
+}
+.podium .block::before { content: ""; position: absolute; inset: 0; z-index: -1; background: var(--medal); opacity: 0.32; -webkit-mask: var(--pat) 0 0 / 40px 40px repeat; mask: var(--pat) 0 0 / 40px 40px repeat; }
+.podium .block b, .podium .p1 .block b { color: var(--carbon); }
+.podium .p1 .block { height: 172px; }
+.podium .p2 .block { height: 132px; }
+.podium .p3 .block { height: 104px; }
+.podium .amt { color: var(--ink); }
+
+/* named awards (the Short Film Festival): the top award a wide gold arch, the others smaller silver arches */
+.awards { list-style: none; margin: 12px 0 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; max-width: 620px; }
+.awards li {
+  --medal: #afb0af; position: relative; isolation: isolate; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end; gap: 4px;
+  min-height: 132px; padding: 18px 14px 16px; text-align: center; color: var(--carbon);
+  border-radius: 50% 50% 6px 6px / 46px 46px 6px 6px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--medal) 30%, #fff), color-mix(in srgb, var(--medal) 12%, #fff));
+  box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--medal) 75%, transparent), 0 16px 30px -22px rgba(40, 40, 41, 0.5);
+}
+.awards li::before { content: ""; position: absolute; inset: 0; z-index: -1; background: var(--medal); opacity: 0.3; -webkit-mask: var(--pat) 0 0 / 40px 40px repeat; mask: var(--pat) 0 0 / 40px 40px repeat; }
+.awards .top { --medal: #f2b544; grid-column: 1 / -1; min-height: 170px; border-radius: 50% 50% 6px 6px / 72px 72px 6px 6px; }
+.aw-name { font: 700 0.95rem/1.2 var(--display); }
+.aw-amt { font: 800 1.15rem/1.1 var(--display); }
+.awards .top .aw-name { font-size: 1.15rem; }
+.awards .top .aw-amt { font-size: clamp(1.5rem, 3.4vw, 2.1rem); }
+@media (max-width: 560px) { .awards { grid-template-columns: repeat(2, minmax(0, 1fr)); } }

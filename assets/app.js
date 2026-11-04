@@ -6,8 +6,11 @@
   const bySlug = Object.fromEntries(events.map((e) => [e.slug, e]));
   const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const aed = (n) => "AED " + n.toLocaleString("en-US");
-  const hasPrizes = (e) => Array.isArray(e.prizes) && e.prizes.length > 0;
-  const pool = (e) => aed(e.prizes.reduce((a, b) => a + b, 0));
+  // prizes are [1st, 2nd, 3rd] in AED; "awards" are named awards [name, AED or null] instead
+  const awards = (e) => (Array.isArray(e.awards) ? e.awards : []);
+  const places = (e) => (Array.isArray(e.prizes) ? e.prizes : []);
+  const hasPrizes = (e) => places(e).length > 0 || awards(e).length > 0;
+  const pool = (e) => aed([...places(e), ...awards(e).map((a) => a[1] || 0)].reduce((a, b) => a + b, 0));
   // team [1, 1] is a solo event: no team name, no team size, and the form talks to one person
   const solo = (e) => e.team?.[0] === 1 && e.team?.[1] === 1;
   const clubName = (id) => clubs[id] + (short[id] ? ` (${short[id]})` : "");
@@ -96,6 +99,14 @@
   // The line added to a failed registration: who to contact if it keeps failing.
   const contactLine = (e) => ` If it keeps failing, contact the organizers${e.contact?.email ? ` at <a href="mailto:${esc(e.contact.email)}">${esc(e.contact.email)}</a>` : ""}${e.contact?.phone ? ` or on WhatsApp at <a href="https://wa.me/${esc(e.contact.phone.replace(/[^0-9]/g, ""))}" target="_blank" rel="noopener">${esc(e.contact.phone)}</a>` : ""}.`;
 
+  // Prizes as three lattice arches, 2nd, 1st, 3rd, like the arches of the dawn scene
+  const PLACES = ["1st place", "2nd place", "3rd place"];
+  // named awards: the top award as a wide gold arch, the rest as smaller arches beneath it
+  const awardList = (e) => { const [top, ...rest] = awards(e); return `<h2 class="h3">Awards</h2>
+    <ol class="awards" aria-label="Awards">${[top, ...rest].map(([name, amt], i) => `<li class="${i ? "aw" : "aw top"}"><span class="aw-name">${esc(name)}</span><span class="aw-amt">${amt ? aed(amt) : "Award"}</span></li>`).join("")}</ol>`; };
+  const podium = (e) => (awards(e).length ? awardList(e) : places(e).length ? `<h2 class="h3">Prizes</h2>
+    <ol class="podium" aria-label="Prizes">${[1, 0, 2].filter((i) => e.prizes[i] != null).map((i) => `<li class="p${i + 1}"><span class="amt">${aed(e.prizes[i])}</span><span class="block"><b>${i + 1}</b></span><span class="place">${PLACES[i]}</span></li>`).join("")}</ol>` : "");
+
   // One cell of the star lattice as an SVG, used as a mask so each tile tints it with its own light.
   const PATTERN_TILE = (() => {
     const R = 32, r = R * 0.62, c = 32, pts = [];
@@ -136,7 +147,7 @@
               <span class="t-status">${status(e)}</span>${tag(e)}
               <span class="t-name">${esc(e.name)}</span>
               <span class="t-host">${esc(hosts(e))}</span>
-              ${e.open && hasPrizes(e) ? `<span class="t-facts">${esc(`${pool(e)} in prizes`)}</span>` : free(e) && e.note ? `<span class="t-facts">${esc(e.note)}</span>` : ""}
+              ${hasPrizes(e) ? `<span class="t-facts"><b>${pool(e)}</b> in prizes</span>` : free(e) && e.note ? `<span class="t-facts">${esc(e.note)}</span>` : ""}
               ${timed(e) ? `<span class="t-when">${esc(`${shortDay(e.day)}, ${timeRange(e)}`)}</span>` : ""}
             </a></li>`).join("")}</ul>
         </div>
@@ -176,7 +187,7 @@
   function band(e) {
     const facts = e.open
       ? [teamLine(e), hasPrizes(e) ? `${pool(e)} in prizes` : "", dayLine(e), e.prelim ? "Online round first" : ""]
-      : [whenLine(e), free(e) && known(e.venue) ? e.venue : "", status(e), e.note];
+      : [whenLine(e), free(e) && known(e.venue) ? e.venue : "", hasPrizes(e) ? `${pool(e)} in prizes` : "", status(e), e.note];
     const reg = e.open ? `<a class="btn ghost" href="${eventHref(e, "#register")}">${solo(e) ? "Register" : "Register your team"}</a>` : "";
     return `
       <section class="stage band" id="${esc(e.slug)}-band" aria-labelledby="${esc(e.slug)}-h" aria-roledescription="slide" aria-label="${esc(e.name)}">
@@ -253,7 +264,7 @@
     // a competition that is not open yet says so in its buttons, so the facts stay to when and where
     const facts = e.open ? [teamLine(e), hasPrizes(e) ? `${pool(e)} in prizes` : "", dayLine(e)].filter(Boolean)
       : free(e) ? [whenLine(e), known(e.venue) ? e.venue : "", status(e), e.note].filter(Boolean)
-      : [teamLine(e), dayLine(e), e.status, e.note].filter(Boolean);
+      : [teamLine(e), hasPrizes(e) ? `${pool(e)} in prizes` : "", dayLine(e), e.status, e.note].filter(Boolean);
     const soon = `<span class="btn" aria-disabled="true">Registrations will open soon</span>`;
     const phNote = e.placeholder ? `<p class="ph-note"><b>Placeholder.</b> This event is a stand-in until the club confirms the details.</p>` : "";
     const top = `
@@ -276,10 +287,12 @@
         <div class="narrow" style="padding-top:48px">
           ${phNote}
           <p class="lead">${e.blurb ? esc(e.blurb) : fallback}</p>
+          ${podium(e)}
           <dl class="panel" style="margin-top:32px">
             ${!free(e) && e.team ? `<div><dt>${solo(e) ? "Entry" : "Team size"}</dt><dd>${solo(e) ? "Individual" : e.team[0] === e.team[1] ? `${e.team[0]} people` : `${e.team[0]}-${e.team[1]} people`}</dd></div>` : ""}
             <div><dt>Date &amp; Time</dt><dd>${timed(e) ? esc(dayLine(e)) : `${known(e.day) ? esc(e.day) + ", " : ""}${esc(dur(e))}`}</dd></div>
             <div><dt>Venue</dt><dd>${known(e.venue) ? esc(e.venue) : "To be confirmed"}</dd></div>
+            ${hasPrizes(e) ? `<div><dt>Prize pool</dt><dd>${pool(e)}</dd></div>` : ""}
             ${free(e) ? `<div><dt>Registration</dt><dd>${esc(e.note || status(e))}</dd></div>`
               : e.status ? `<div><dt>Registration</dt><dd>${esc(e.status + (e.note ? ", " + e.note.charAt(0).toLowerCase() + e.note.slice(1) : ""))}</dd></div>` : ""}
           </dl>
@@ -295,7 +308,6 @@
       !e.prelim && [one ? "You're confirmed" : "Teams confirmed", "We email the schedule before the fest."],
       [known(e.day) ? `The event, ${dayLine(e)}` : "The event, day to be confirmed", `${e.final} ${e.bring || ""}`],
     ].filter(Boolean);
-    const places = ["1st place", "2nd place", "3rd place"];
     main.innerHTML = `${top}
       <nav class="tabs" aria-label="${esc(e.name)}">
         <div class="wrap" role="tablist">
@@ -314,8 +326,7 @@
               <h2 class="h3">Timeline</h2>
               <ol class="timeline">${steps.map(([h, p]) => `<li><h4>${esc(h)}</h4><p>${esc(p)}</p></li>`).join("")}</ol>
               ${contactBlock(e)}
-              ${hasPrizes(e) ? `<h2 class="h3">Prizes</h2>
-              <ol class="podium" aria-label="Prizes">${[1, 0, 2].filter((i) => e.prizes[i] != null).map((i) => `<li class="p${i + 1}"><span class="amt">${aed(e.prizes[i])}</span><span class="block"><b>${i + 1}</b></span><span class="place">${places[i]}</span></li>`).join("")}</ol>` : ""}
+              ${podium(e)}
             </div>
             <aside class="panel" aria-label="At a glance">
               <dl>
