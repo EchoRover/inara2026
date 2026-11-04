@@ -13,7 +13,7 @@
   const clubName = (id) => clubs[id] + (short[id] ? ` (${short[id]})` : "");
   // Collabs credit every host club equally.
   const hosts = (e) => e.hosts.map(clubName).join(" × ");
-  const teamLine = (e) => (solo(e) ? "Individual entry" : e.team[0] === e.team[1] ? `Teams of ${e.team[0]}` : `Teams of ${e.team[0]} to ${e.team[1]}`);
+  const teamLine = (e) => (solo(e) ? "Individual entry" : e.team[0] === e.team[1] ? `Teams of ${e.team[0]}` : e.team[0] === 1 ? `Solo or teams of up to ${e.team[1]}` : `Teams of ${e.team[0]} to ${e.team[1]}`);
   // "hours" is a number (2 -> "2 hours") or text like "3 to 4 hours" / "All through the fest"
   const dur = (e) => (typeof e.hours === "string" ? e.hours : `${e.hours} ${e.hours === 1 ? "hour" : "hours"}`);
   // entry: "free" = a show, stall or workshop anyone can walk into, no registration
@@ -21,7 +21,7 @@
   // Competitions get the tiles and slides. Free shows and stalls go in "Also at Inara" below them.
   const comps = events.filter((e) => !free(e));
   const extras = events.filter(free);
-  const status = (e) => (e.open ? "Registration open" : free(e) ? "Free to attend" : "Opens soon");
+  const status = (e) => (e.open ? "Registration open" : free(e) ? "Free to attend" : "Registrations will open soon");
   const known = (v) => v && v !== "TBC";
   // "time" is [start, end] in 24-hour UAE time, like ["18:00", "20:00"]
   const timed = (e) => known(e.day) && Array.isArray(e.time) && e.time.length === 2;
@@ -43,8 +43,8 @@
   // Served over http(s), registrations go to /api on the same address (the shared backend).
   // Opened straight from disk there is no backend, and the form only simulates a registration.
   const API = window.INARA_API ?? (location.protocol.startsWith("http") ? "/api" : null);
-  // Prototype mode: the form works on screen, but nothing is sent or saved until Inara is approved.
-  // Set to false (and start the backend) to take real registrations.
+  // Preview mode: a dummy registration page. The form works on screen, but nothing is sent or saved.
+  // Registrations will go through the university's registration system (CRM); until then this stays true.
   const PREVIEW = true;
   const smooth = () => (matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth");
 
@@ -53,10 +53,14 @@
     scenes.forEach((s) => s.stop());
     scenes = [...main.querySelectorAll("canvas[data-scene]")].map((c) => window.InaraScenes.mount(c, c.dataset.scene));
   }
+  // "guidelines" is a full web address, or a file in the site like "rulebooks/error-404.pdf".
+  // Shows, stalls and workshops have no rules, so they get no button at all.
   function guidelinesBtn(e, cls = "btn ghost") {
-    return e.guidelines
-      ? `<a class="${cls}" href="${esc(e.guidelines)}" target="_blank" rel="noopener">Read the guidelines</a>`
-      : `<span class="${cls}" aria-disabled="true">Guidelines coming soon</span>`;
+    if (e.guidelines) {
+      const href = /^https?:\/\//.test(e.guidelines) ? e.guidelines : root + e.guidelines;
+      return `<a class="${cls}" href="${esc(href)}" target="_blank" rel="noopener">Read the guidelines</a>`;
+    }
+    return free(e) ? "" : `<span class="${cls}" aria-disabled="true">Guidelines will be released soon</span>`;
   }
 
   // One cell of the star lattice as an SVG, used as a mask so each tile tints it with its own light.
@@ -216,7 +220,11 @@
       .filter((r) => r.score > 1).sort((a, b) => b.score - a.score).slice(0, 3);
     const more = recs.length ? `<div class="narrow" style="padding-bottom:96px"><h2 class="h2" style="margin-top:56px">You might also like</h2>
       <ul class="more">${recs.map((r) => `<li><a href="${eventHref(r.x)}">${esc(r.x.name)}</a><span>${esc(hosts(r.x))}</span></li>`).join("")}</ul></div>` : `<div style="padding-bottom:96px"></div>`;
-    const facts = e.open ? [teamLine(e), hasPrizes(e) ? `${pool(e)} in prizes` : "", dayLine(e)].filter(Boolean) : [whenLine(e), free(e) && known(e.venue) ? e.venue : "", status(e)].filter(Boolean);
+    // a competition that is not open yet says so in its buttons, so the facts stay to when and where
+    const facts = e.open ? [teamLine(e), hasPrizes(e) ? `${pool(e)} in prizes` : "", dayLine(e)].filter(Boolean)
+      : free(e) ? [whenLine(e), known(e.venue) ? e.venue : "", status(e)].filter(Boolean)
+      : [teamLine(e), dayLine(e)].filter(Boolean);
+    const soon = `<span class="btn" aria-disabled="true">Registrations will open soon</span>`;
     const phNote = e.placeholder ? `<p class="ph-note"><b>Placeholder.</b> This event is a stand-in until the club confirms the details.</p>` : "";
     const top = `
       <section class="stage ev-top" aria-labelledby="ev-h">
@@ -226,20 +234,24 @@
           <h1 class="big" id="ev-h">${esc(e.name)}</h1>
           ${e.line ? `<p class="tagline">${esc(e.line)}</p>` : ""}
           <p class="facts">${facts.map((f) => `<span>${esc(f)}</span>`).join("")}</p>
-          ${e.open ? `<div class="actions"><a class="btn" href="#register" data-tab="register">${regLabel}</a>${guidelinesBtn(e)}</div>` : `<div class="actions">${guidelinesBtn(e)}</div>`}
+          ${e.open ? `<div class="actions"><a class="btn" href="#register" data-tab="register">${regLabel}</a>${guidelinesBtn(e)}</div>`
+            : free(e) ? (e.guidelines ? `<div class="actions">${guidelinesBtn(e)}</div>` : "")
+            : `<div class="actions">${soon}${guidelinesBtn(e)}</div>`}
         </div>
       </section>`;
 
     if (!e.open) {
+      const fallback = `The ${esc(e.hosts.map((h) => clubs[h]).join(" and "))} ${e.hosts.length > 1 ? "are" : "is"} putting the final details together.`;
       main.innerHTML = `${top}
         <div class="narrow" style="padding-top:48px">
           ${phNote}
-          ${free(e) ? `<p class="lead">${esc(e.blurb || "")}</p>
+          <p class="lead">${e.blurb ? esc(e.blurb) : fallback}</p>
           <dl class="panel" style="margin-top:32px">
+            ${!free(e) && e.team ? `<div><dt>${solo(e) ? "Entry" : "Team size"}</dt><dd>${solo(e) ? "Individual" : e.team[0] === e.team[1] ? `${e.team[0]} people` : `${e.team[0]} to ${e.team[1]} people`}</dd></div>` : ""}
             <div><dt>When</dt><dd>${timed(e) ? esc(dayLine(e)) : `${known(e.day) ? esc(e.day) + ", " : ""}${esc(dur(e))}`}</dd></div>
             <div><dt>Where</dt><dd>${known(e.venue) ? esc(e.venue) : "To be confirmed"}</dd></div>
-            <div><dt>Entry</dt><dd>Free, no registration needed</dd></div>
-          </dl>` : `<p class="lead">The ${esc(e.hosts.map((h) => clubs[h]).join(" and "))} ${e.hosts.length > 1 ? "are" : "is"} putting the final details together. Registration opens on this page soon.</p>`}
+            <div><dt>${free(e) ? "Entry" : "Registration"}</dt><dd>${free(e) ? "Free, no registration needed" : "Registrations will open soon"}</dd></div>
+          </dl>
         </div>${more}`;
       return;
     }
@@ -649,9 +661,9 @@
       if (PREVIEW) {
         host.innerHTML = `
           <div class="reg-card preview-done">
-            <p class="kicker">Prototype</p>
-            <h2 class="h2" id="reg-h" tabindex="-1">Registration isn't open yet</h2>
-            <p class="lede">This is a prototype of the Inara site. Registrations open once Inara is approved. Nothing you typed was sent or saved.</p>
+            <p class="kicker">Preview</p>
+            <h2 class="h2" id="reg-h" tabindex="-1">Registrations aren't being saved yet</h2>
+            <p class="lede">This form is a preview. Registrations will move to the university's registration system soon. Nothing you typed was sent or saved.</p>
             <a class="btn ghost" href="#about" data-tab="about">Back to ${esc(e.name)}</a>
           </div>`;
         try { localStorage.removeItem(key); } catch (_) {}

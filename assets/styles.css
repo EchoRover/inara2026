@@ -14,8 +14,8 @@
   --display: "Montserrat", system-ui, sans-serif; --sans: "Montserrat", system-ui, sans-serif; --ar: "Amiri", "Noto Naskh Arabic", serif;
   color-scheme: light;
 }
-/* the Carbon stages: the same token names with dark values, so everything inside them follows */
-.stage, .slides, .where {
+/* the Carbon stages and footer: the same token names with dark values, so everything inside follows */
+.stage, .slides, .where, .foot {
   --page: var(--carbon); --pop: #373837; --ink: #ffffff; --ink-soft: #dad8d8; --line: rgba(218, 216, 216, 0.2);
   --surface: rgba(255, 255, 255, 0.06); --accent: #f36e68; --field: rgba(255, 255, 255, 0.07); --field-line: rgba(218, 216, 216, 0.4); --danger: #f7a3a1;
   color: var(--ink); color-scheme: dark;
@@ -190,9 +190,19 @@ main:focus { outline: none; }
 .more span { color: var(--ink-soft); font-weight: 600; font-size: 0.93rem; }
 
 /* ---------- footer ---------- */
-.foot { padding: 40px clamp(16px, 4vw, 40px) 90px; max-width: 1160px; margin: 0 auto; color: var(--ink-soft); border-top: 1px solid var(--line); font-size: 0.95rem; }
-.foot p { margin: 0 0 4px; }
+/* Carbon, with the institute's logo, laid out like the Afkar footer */
+.foot { padding: 56px max(clamp(16px, 4vw, 40px), calc((100% - 1080px) / 2)) 64px; background: var(--page); color: var(--ink-soft); border-top: 1px solid var(--line); font-size: 0.95rem; }
+.foot p { margin: 0 0 4px; max-width: 78ch; }
 .foot strong { color: var(--ink); }
+.foot-top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 24px; margin-bottom: 28px; }
+.foot-logo { display: inline-block; line-height: 0; }
+.foot-logo img { height: 80px; width: auto; }
+.foot-links { display: flex; flex-wrap: wrap; gap: 8px 24px; font-weight: 600; }
+.foot-links a { color: var(--ink); text-decoration: none; }
+.foot-links a:hover { text-decoration: underline; text-underline-offset: 4px; }
+.foot .copy { margin-top: 16px; font-size: 0.85rem; }
+.foot .made { font-size: 0.8rem; opacity: 0.75; }
+@media (max-width: 560px) { .foot-logo img { height: 64px; } }
 
 @media (max-width: 860px) {
   .stage::after { background: linear-gradient(0deg, color-mix(in srgb, var(--page) 92%, transparent) 0%, color-mix(in srgb, var(--page) 70%, transparent) 55%, color-mix(in srgb, var(--page) 35%, transparent) 100%); }
@@ -238,7 +248,6 @@ body[data-page="event"] .bar { position: absolute; }
 .where .lede { opacity: 0.6; transition: opacity 0.6s; }
 .where.arrived .lede { opacity: 1; }
 .map-note { margin: 18px 0 0; font-size: 0.82rem; color: var(--ink-soft); }
-.credit { margin-top: 12px !important; }
 
 /* prize podium: 2nd, 1st, 3rd */
 .podium { list-style: none; margin: 8px 0 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; align-items: end; max-width: 560px; }
@@ -420,7 +429,6 @@ body[data-page="event"] .bar { position: absolute; }
    sister link moves to the footer only, so the bar stays on one line. */
 .bar-nav a { white-space: nowrap; }
 @media (max-width: 480px) { .bar-nav .sister { display: none; } }
-.sister-note a { font-weight: 600; }
 
 /* Slides: shorter than a full screen so the next section peeks in, with a smaller title to match */
 .slides .band { min-height: 70svh; }
