@@ -220,7 +220,7 @@
     // a competition that is not open yet says so in its buttons, so the facts stay to when and where
     const facts = e.open ? [teamLine(e), hasPrizes(e) ? `${pool(e)} in prizes` : "", dayLine(e)].filter(Boolean)
       : free(e) ? [whenLine(e), known(e.venue) ? e.venue : "", status(e), e.note].filter(Boolean)
-      : [teamLine(e), dayLine(e)].filter(Boolean);
+      : [teamLine(e), dayLine(e), e.status, e.note].filter(Boolean);
     const soon = `<span class="btn" aria-disabled="true">Registrations will open soon</span>`;
     const phNote = e.placeholder ? `<p class="ph-note"><b>Placeholder.</b> This event is a stand-in until the club confirms the details.</p>` : "";
     const top = `
@@ -233,7 +233,7 @@
           <p class="facts">${facts.map((f) => `<span>${esc(f)}</span>`).join("")}</p>
           ${e.open ? `<div class="actions"><a class="btn" href="#register" data-tab="register">${regLabel}</a>${guidelinesBtn(e)}</div>`
             : free(e) ? (e.guidelines ? `<div class="actions">${guidelinesBtn(e)}</div>` : "")
-            : `<div class="actions">${soon}${guidelinesBtn(e)}</div>`}
+            : `<div class="actions">${e.status ? "" : soon}${guidelinesBtn(e)}</div>`}
         </div>
       </section>`;
 
@@ -247,7 +247,8 @@
             ${!free(e) && e.team ? `<div><dt>${solo(e) ? "Entry" : "Team size"}</dt><dd>${solo(e) ? "Individual" : e.team[0] === e.team[1] ? `${e.team[0]} people` : `${e.team[0]}-${e.team[1]} people`}</dd></div>` : ""}
             <div><dt>Date &amp; Time</dt><dd>${timed(e) ? esc(dayLine(e)) : `${known(e.day) ? esc(e.day) + ", " : ""}${esc(dur(e))}`}</dd></div>
             <div><dt>Venue</dt><dd>${known(e.venue) ? esc(e.venue) : "To be confirmed"}</dd></div>
-            ${free(e) ? `<div><dt>Registration</dt><dd>${esc(e.note || status(e))}</dd></div>` : ""}
+            ${free(e) ? `<div><dt>Registration</dt><dd>${esc(e.note || status(e))}</dd></div>`
+              : e.status ? `<div><dt>Registration</dt><dd>${esc(e.status + (e.note ? ", " + e.note.charAt(0).toLowerCase() + e.note.slice(1) : ""))}</dd></div>` : ""}
           </dl>
         </div>${more}`;
       return;
